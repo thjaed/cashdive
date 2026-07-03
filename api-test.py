@@ -1,126 +1,8 @@
-import requests
-import os
 from prettytable import PrettyTable
 import pyfiglet
-import json
 from datetime import datetime
-
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-REDIRECT_URI = "https://console.truelayer.com/redirect-page"
-
-def get_auth_link():
-    url = "https://auth.truelayer-sandbox.com/v1/authuri"
-
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json"
-    }
-
-    payload = {
-        "response_type": "code",
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "redirect_uri": "https://console.truelayer.com/redirect-page",
-        "scope": "info accounts balance transactions",
-        "state": "abcddd",
-        "consent_id": "edfgfgh",
-        "provider_id": "mock"
-    }
-
-    response = requests.post(url, json=payload, headers=headers)
-    return response.json()
-
-
-def exchange_code(code):
-    url = 'https://auth.truelayer-sandbox.com/connect/token'
-
-    data = {
-        "grant_type": "authorization_code",
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "redirect_uri": "https://console.truelayer.com/redirect-page",
-        "code": code
-    }
-
-    response = requests.post(url, data=data)
-    response.raise_for_status()
-    return response.json()
-
-def get_accounts(token):
-    url = "https://api.truelayer-sandbox.com/data/v1/accounts"
-
-    headers = {
-        "Accept": "application/json",
-        "Authorization": f"Bearer {token}"
-    }
-
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.json()
-
-def get_balance(token, id):
-    url = f"https://api.truelayer-sandbox.com/data/v1/accounts/{id}/balance"
-
-    headers = {
-        "Accept": "application/json",
-        "Authorization": f"Bearer {token}"
-    }
-
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.json()
-
-def get_transactions(token, id):
-    url = f"https://api.truelayer-sandbox.com/data/v1/accounts/{id}/transactions"
-
-    headers = {
-        "Accept": "application/json",
-        "Authorization": f"Bearer {token}"
-    }
-
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.json()
-
-def save_token(token_data):
-    with open("token.json", "w") as f:
-        json.dump(token_data, f)
-
-def load_token():
-    try:
-        with open("token.json", "r") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return None
-
-def token_is_valid(token):
-    try:
-        get_accounts(token)
-        return True
-    except:
-        return False
-
-def login():
-    link = get_auth_link()
-
-    if link.get("success") == True:
-        print(f"Login Here: {link['result']}")
-
-        code = input("Paste Code: ")
-        response = exchange_code(code)
-
-        if response.get("access_token"):
-            token = response["access_token"]
-            print("Login Succeded!")
-            print("\n")
-            return token
-        else:
-            print("Error gettting token")
-            print(response)
-
-    else:
-        print(f"Error getting auth link: {link}")
+from api import TrueLayerClient
+from auth import TrueLayerAuth
 
 text = "CASHDIVE"
 ascii_art = pyfiglet.figlet_format(text, font="slant")
@@ -138,7 +20,7 @@ def print_accounts():
     print("Accounts")
     table = PrettyTable(["Name", "Type", "Currency", "Number", "Sort Code", "ID"])
 
-    accounts = get_accounts(token)
+    accounts = client.get_accounts()
 
     for a in accounts["results"]:
         table.add_row([a["display_name"],
@@ -155,7 +37,7 @@ def print_balance(id):
     print(f"Balance for {id}")
     table = PrettyTable(["Currency", "Available", "Current", "Overdraft"])
 
-    b = get_balance(token, id)["results"][0]
+    b = client.get_balance(id)["results"][0]
 
     table.add_row([b["currency"],
                    b["available"],
@@ -169,7 +51,7 @@ def print_transactions(id):
     print(f"Transactions for {id}")
     table = PrettyTable(["Amount", "Currency", "Description", "Date", "Running Balance"])
 
-    transactions = get_transactions(token, id)["results"]
+    transactions = client.get_transactions(id)["results"]
 
     for t in transactions:
 
@@ -186,21 +68,15 @@ def print_transactions(id):
 
     print(table)
 
+auth = TrueLayerAuth()
 
-token_data = load_token()
-token = None
+if not auth.login():
+    print(auth.get_auth_link())
 
-if token_data:
-    print("Testing stored token")
-    token = token_data["access_token"]
+    code = input("Code: ")
+    auth.exchange_code(code)
 
-    if not token_is_valid(token):
-        print("Token expired, logging in again")
-        token = None
-
-if not token:
-    token = login()
-    save_token({"access_token": token})
+client = TrueLayerClient(auth.access_token)
 
 print_accounts()
 
