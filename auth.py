@@ -6,8 +6,17 @@ class TrueLayerAuth:
     def __init__(self):
         self.client_id = os.getenv("CLIENT_ID")
         self.client_secret = os.getenv("CLIENT_SECRET")
+        
+        if self.client_id == None and self.client_secret == None:
+            raise Exception("CLIENT_ID and CLIENT_SECRET environment variables not set")
+        elif self.client_id == None:
+            raise Exception("CLIENT_ID environment variable not set")
+        elif self.client_secret == None:
+            raise Exception("CLIENT_SECRET environment variable not set")
+        
         self.redirect_uri = "https://console.truelayer.com/redirect-page"
         self.access_token = None
+        self.refresh_token = None
 
     def get_auth_link(self):
         # get a link to authenticate with bank provider
@@ -114,9 +123,12 @@ class TrueLayerAuth:
     
     def login(self):
         # load tokens from file
-        self.load_token()
+        if not self.load_token():
+            # if the token file doesn't exist
+            return False
+        
         if not self.token_is_valid(self.access_token):
-            # refresh using access token if access token doesn't work
+            # refresh using refresh token if access token doesn't work
             self.refresh_access_token()
 
         if self.token_is_valid(self.access_token):
