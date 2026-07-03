@@ -22,7 +22,7 @@ class TrueLayerAuth:
             "client_id": self.client_id,
             "client_secret": self.client_secret,
             "redirect_uri": self.redirect_uri,
-            "scope": "info accounts balance transactions",
+            "scope": "info accounts balance transactions offline_access",
             "state": "abcddd",
             "consent_id": "edfgfgh",
             "provider_id": "mock"
@@ -49,12 +49,37 @@ class TrueLayerAuth:
 
         data = response.json()
         self.access_token = data["access_token"]
+        self.refresh_token = data["refresh_token"]
         self.save_token()
 
         return self.access_token
 
+    def refresh_access_token(self):
+        url = 'https://auth.truelayer-sandbox.com/connect/token'
+
+        data = {
+            "grant_type": "refresh_token",
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "refresh_token": self.refresh_token
+        }
+
+        response = requests.post(url, data=data)
+        response.raise_for_status()
+
+        data = response.json()
+        self.access_token = data["access_token"]
+        self.refresh_token = data["refresh_token"]
+        self.save_token()
+
+        return self.access_token
+
+
     def save_token(self):
-        token_data = {"access_token": self.access_token}
+        token_data = {
+                      "access_token": self.access_token,
+                      "refresh_token": self.refresh_token
+                      }
         with open("token.json", "w") as f:
             json.dump(token_data, f)
 
@@ -62,7 +87,10 @@ class TrueLayerAuth:
         try:
             with open("token.json", "r") as f:
                 data = json.load(f)
-                return data["access_token"]
+                self.access_token = data["access_token"]
+                self.refresh_token = data["refresh_token"]
+                return data
+                
         except FileNotFoundError:
             return None
 
@@ -82,7 +110,10 @@ class TrueLayerAuth:
             return False
     
     def login(self):
-        self.access_token = self.load_token()
+        self.load_token()
+        if not self.token_is_valid(self.access_token):
+            self.refresh_access_token()
+
         if self.token_is_valid(self.access_token):
             return self.access_token
         else:

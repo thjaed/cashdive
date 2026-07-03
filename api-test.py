@@ -90,3 +90,6 @@ while True:
             print_balance(input("Account ID: "))
         case "3":
             print_transactions(input("Account ID: "))
+        case "4":
+            print("Refreshing Token")
+            auth.refresh_access_token()
