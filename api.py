@@ -40,3 +40,99 @@ class TrueLayerClient:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         return response.json()
+    
+    def get_pending_transactions(self, id):
+        url = f"https://api.truelayer-sandbox.com/data/v1/accounts/{id}/transactions/pending"
+
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.access_token}"
+        }
+
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    
+    def get_standing_orders(self, id):
+        url = f"https://api.truelayer-sandbox.com/data/v1/accounts/{id}/standing_orders"
+
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.access_token}"
+        }
+
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+    def get_direct_debits(self, id):
+        url = f"https://api.truelayer-sandbox.com/data/v1/accounts/{id}/direct_debits"
+
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.access_token}"
+        }
+
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    
+    def get_cards(self):
+        url = f"https://api.truelayer-sandbox.com/data/v1/cards"
+
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.access_token}"
+        }
+
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    
+    def get_card(self, id):
+        url = f"https://api.truelayer-sandbox.com/data/v1/cards/{id}"
+
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.access_token}"
+        }
+
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+    def get_card_balance(self, id):
+        url = f"https://api.truelayer-sandbox.com/data/v1/cards/{id}/balance"
+
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.access_token}"
+        }
+
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+    def get_card_transactions(self, id):
+        url = f"https://api.truelayer-sandbox.com/data/v1/cards/{id}/transactions"
+
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.access_token}"
+        }
+
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+    def get_card_pending_transactions(self, id):
+        url = f"https://api.truelayer-sandbox.com/data/v1/cards/{id}/transactions/pending"
+
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.access_token}"
+        }
+
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
