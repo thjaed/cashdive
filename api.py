@@ -1,5 +1,5 @@
 import requests
-import json
+from models import *
 
 class TrueLayerClient:
     def __init__(self, access_token):
@@ -29,8 +29,8 @@ class TrueLayerClient:
         response.raise_for_status()
         return response.json()
 
-    def get_transactions(self, id):
-        url = f"https://api.truelayer-sandbox.com/data/v1/accounts/{id}/transactions"
+    def get_transactions(self, account_id: str) -> list[Transaction]:
+        url = f"https://api.truelayer-sandbox.com/data/v1/accounts/{account_id}/transactions"
 
         headers = {
             "Accept": "application/json",
@@ -39,7 +39,34 @@ class TrueLayerClient:
 
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        return response.json()
+        
+        data = response.json()["results"]
+        
+        transactions = []
+        for t in data:
+            rb = t.get("running_balance")
+            if rb and rb.get("amount") and rb.get("currency"):
+                running_balance = RunningBalance(
+                        amount=rb["amount"],
+                        currency=rb["currency"]
+                    )
+            else:
+                running_balance = RunningBalance()
+            
+            transactions.append(Transaction(
+                transaction_id = t["transaction_id"],
+                timestamp = datetime.fromisoformat(t["timestamp"]),
+                description=t["description"],
+                amount=t["amount"],
+                currency=t["currency"],
+                transaction_type=t["transaction_type"],
+                transaction_category=t["transaction_category"],
+                transaction_classification=t["transaction_classification"],
+                merchant_name=t.get("merchant_name"),
+                running_balance=running_balance
+                
+            ))
+        return transactions
     
     def get_pending_transactions(self, id):
         url = f"https://api.truelayer-sandbox.com/data/v1/accounts/{id}/transactions/pending"

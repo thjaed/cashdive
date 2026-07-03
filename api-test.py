@@ -51,19 +51,15 @@ def print_transactions(id):
     print(f"Transactions for {id}")
     table = PrettyTable(["Amount", "Currency", "Description", "Date", "Running Balance"])
 
-    transactions = client.get_transactions(id)["results"]
+    transactions = client.get_transactions(id)
 
     for t in transactions:
 
-        timestamp = t["timestamp"]
-        dt = datetime.fromisoformat(timestamp)
-        formatted = dt.strftime("%A %d %B %Y %H:%M")
-
-        table.add_row([t["amount"],
-                       t["currency"],
-                       t["description"],
-                       formatted,
-                       t["running_balance"]["amount"]]
+        table.add_row([t.amount,
+                       t.currency,
+                       t.description,
+                       t.timestamp.strftime("%A %d %B %Y"),
+                       t.running_balance.amount]
                     )
 
     print(table)

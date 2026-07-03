@@ -10,6 +10,7 @@ class TrueLayerAuth:
         self.access_token = None
 
     def get_auth_link(self):
+        # get a link to authenticate with bank provider
         url = "https://auth.truelayer-sandbox.com/v1/authuri"
 
         headers = {
@@ -34,6 +35,7 @@ class TrueLayerAuth:
 
 
     def exchange_code(self, code):
+        # exchange code from auth link for access & refresh tokens
         url = 'https://auth.truelayer-sandbox.com/connect/token'
 
         data = {
@@ -55,6 +57,7 @@ class TrueLayerAuth:
         return self.access_token
 
     def refresh_access_token(self):
+        # get a new access token from the refresh token
         url = 'https://auth.truelayer-sandbox.com/connect/token'
 
         data = {
@@ -96,11 +99,11 @@ class TrueLayerAuth:
 
     def token_is_valid(self, token):
         try:
-            url = "https://api.truelayer-sandbox.com/data/v1/me"
+            url = "https://api.truelayer-sandbox.com/data/v1/accounts"
 
             headers = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {token}"
+                "Accept": "application/json",
+                "Authorization": f"Bearer {token}"
             }
 
             response = requests.get(url, headers=headers)
@@ -110,8 +113,10 @@ class TrueLayerAuth:
             return False
     
     def login(self):
+        # load tokens from file
         self.load_token()
         if not self.token_is_valid(self.access_token):
+            # refresh using access token if access token doesn't work
             self.refresh_access_token()
 
         if self.token_is_valid(self.access_token):
