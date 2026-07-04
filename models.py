@@ -48,5 +48,26 @@ class Transaction:
     transaction_category: TransactionCategory
     transaction_classification: list[str]
     running_balance: RunningBalance
+    pending: bool
     merchant_name: str | None = None
+
+class AccountType(Enum):
+    TRANSACTION = "TRANSACTION"
+    SAVINGS = "SAVINGS"
+    BUISNESS_TRANSACTION = "BUISNESS_TRANSACTION"
+    BUISNESS_SAVINGS = "BUISNESS_SAVINGS"
     
+@dataclass
+class Account:
+    account_id: str
+    account_type: AccountType
+    display_name: str
+    currency: Currency
+    update_timesamp: datetime
+
+@dataclass
+class Balance:
+    currency: Currency
+    current: Decimal
+    available: Decimal | None = None
+    update_timesamp: datetime | None = None

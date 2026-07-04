@@ -18,32 +18,31 @@ def print_options():
 
 def print_accounts():
     print("Accounts")
-    table = PrettyTable(["Name", "Type", "Currency", "Number", "Sort Code", "ID"])
+    table = PrettyTable(["Name", "Type", "Currency", "ID"])
 
     accounts = client.get_accounts()
 
-    for a in accounts["results"]:
-        table.add_row([a["display_name"],
-                                a["account_type"],
-                                a["currency"],
-                                a["account_number"]["number"],
-                                a["account_number"]["sort_code"],
-                                a["account_id"]]
-                                )
+    for a in accounts:
+        table.add_row([
+            a.display_name,
+            a.account_type,
+            a.currency,
+            a.account_id
+        ])
 
     print(table)
 
 def print_balance(id):
     print(f"Balance for {id}")
-    table = PrettyTable(["Currency", "Available", "Current", "Overdraft"])
+    table = PrettyTable(["Currency", "Available", "Current"])
 
-    b = client.get_balance(id)["results"][0]
+    b = client.get_balance(id)
 
-    table.add_row([b["currency"],
-                   b["available"],
-                   b["current"],
-                   b["overdraft"]]
-                )
+    table.add_row([
+        b.currency,
+        b.available,
+        b.current
+    ])
 
     print(table)
 
@@ -54,13 +53,13 @@ def print_transactions(id):
     transactions = client.get_transactions(id)
 
     for t in transactions:
-
-        table.add_row([t.amount,
-                       t.currency,
-                       t.description,
-                       t.timestamp.strftime("%A %d %B %Y"),
-                       t.running_balance.amount]
-                    )
+        table.add_row([
+            t.amount,
+            t.currency,
+            t.description,
+            t.timestamp.strftime("%A %d %B %Y"),
+            t.running_balance.amount]
+        )
 
     print(table)
 
