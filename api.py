@@ -25,7 +25,7 @@ class TrueLayerClient:
                 account_type=a["account_type"],
                 display_name=a["display_name"],
                 currency=a["currency"],
-                update_timesamp=a["update_timestamp"]                
+                update_timestamp=a["update_timestamp"]                
             ))
             
         return accounts
@@ -43,7 +43,7 @@ class TrueLayerClient:
         
         b = response.json()["results"][0]
         
-        timestamp = b.get("update_timesamp")
+        timestamp = b.get("update_timestamp")
         if timestamp:
             timestamp = datetime.fromisoformat(timestamp)
         
@@ -51,7 +51,7 @@ class TrueLayerClient:
             currency=b["currency"],
             current=b["current"],
             available=b.get("available"),
-            update_timesamp=timestamp
+            update_timestamp=timestamp
         )
         
         return balance

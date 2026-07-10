@@ -63,11 +63,11 @@ class Account:
     account_type: AccountType
     display_name: str
     currency: Currency
-    update_timesamp: datetime
+    update_timestamp: datetime
 
 @dataclass
 class Balance:
     currency: Currency
     current: Decimal
     available: Decimal | None = None
-    update_timesamp: datetime | None = None
+    update_timestamp: datetime | None = None
