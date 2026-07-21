@@ -21,7 +21,6 @@ class TransactionDb:
     def __exit__(self, exc_type, exc_value, traceback):
         self.conn.close()
         
-        
     def create_table(self):
         query = """
         CREATE TABLE IF NOT EXISTS transactions (
@@ -63,14 +62,13 @@ class TransactionDb:
             pending,
             merchant_name
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (transaction_id) DO NOTHING;
         """
         
         try:
+            inserted = 0
             for t in transactions:
-                print(t.transaction_classification)
-                print(t.merchant_name)
-                print("\n")
                 self.cursor.execute(query, (
                     t.transaction_id,
                     t.timestamp,
@@ -85,8 +83,9 @@ class TransactionDb:
                     t.pending,
                     t.merchant_name
                 ))
+                inserted += self.cursor.rowcount
             self.conn.commit()
-            print(f"Transactions inserted")
+            print(f"{inserted} transactions inserted")
             
         except Exception as e:
             print(f"An error occured inserting transactions: {e}")
@@ -123,24 +122,3 @@ class TransactionDb:
         except Exception as e:
             print(f"An error occured getting transactions: {e}")
             return []
-
-
-
-def test():
-    from prettytable import PrettyTable
-    
-    with TransactionDb() as db:
-        transactions = db.get_transactions()
-
-    table = PrettyTable(["Amount", "Currency", "Description", "Date", "Running Balance"])
-
-    for t in transactions:
-            table.add_row([
-                t.amount,
-                t.currency,
-                t.description,
-                t.timestamp.strftime("%A %d %B %Y"),
-                t.running_balance.amount]
-            )
-
-    print(table) 

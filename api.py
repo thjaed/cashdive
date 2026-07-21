@@ -2,15 +2,15 @@ import requests
 from models import *
 
 class TrueLayerClient:
-    def __init__(self, access_token):
-        self.access_token = access_token
+    def __init__(self, auth):
+        self.auth = auth
     
     def get_accounts(self) -> list[Account]:
         url = "https://api.truelayer-sandbox.com/data/v1/accounts"
 
         headers = {
             "Accept": "application/json",
-            "Authorization": f"Bearer {self.access_token}"
+            "Authorization": f"Bearer {self.auth.token}"
         }
 
         response = requests.get(url, headers=headers)
@@ -35,7 +35,7 @@ class TrueLayerClient:
 
         headers = {
             "Accept": "application/json",
-            "Authorization": f"Bearer {self.access_token}"
+            "Authorization": f"Bearer {self.auth.token}"
         }
 
         response = requests.get(url, headers=headers)
@@ -61,7 +61,7 @@ class TrueLayerClient:
 
         headers = {
             "Accept": "application/json",
-            "Authorization": f"Bearer {self.access_token}"
+            "Authorization": f"Bearer {self.auth.token}"
         }
 
         response = requests.get(url, headers=headers)
@@ -101,7 +101,7 @@ class TrueLayerClient:
 
         headers = {
             "Accept": "application/json",
-            "Authorization": f"Bearer {self.access_token}"
+            "Authorization": f"Bearer {self.auth.token}"
         }
 
         response = requests.get(url, headers=headers)
@@ -141,7 +141,7 @@ class TrueLayerClient:
 #
     #    headers = {
     #        "Accept": "application/json",
-    #        "Authorization": f"Bearer {self.access_token}"
+    #        "Authorization": f"Bearer {self.auth.token}"
     #    }
 #
     #    response = requests.get(url, headers=headers)
@@ -153,7 +153,7 @@ class TrueLayerClient:
 #
     #    headers = {
     #        "Accept": "application/json",
-    #        "Authorization": f"Bearer {self.access_token}"
+    #        "Authorization": f"Bearer {self.auth.token}"
     #    }
 #
     #    response = requests.get(url, headers=headers)
@@ -165,7 +165,7 @@ class TrueLayerClient:
 #
     #    headers = {
     #        "Accept": "application/json",
-    #        "Authorization": f"Bearer {self.access_token}"
+    #        "Authorization": f"Bearer {self.auth.token}"
     #    }
 #
     #    response = requests.get(url, headers=headers)
@@ -177,7 +177,7 @@ class TrueLayerClient:
 #
     #    headers = {
     #        "Accept": "application/json",
-    #        "Authorization": f"Bearer {self.access_token}"
+    #        "Authorization": f"Bearer {self.auth.token}"
     #    }
 #
     #    response = requests.get(url, headers=headers)
@@ -189,7 +189,7 @@ class TrueLayerClient:
 #
     #    headers = {
     #        "Accept": "application/json",
-    #        "Authorization": f"Bearer {self.access_token}"
+    #        "Authorization": f"Bearer {self.auth.token}"
     #    }
 #
     #    response = requests.get(url, headers=headers)
@@ -201,7 +201,7 @@ class TrueLayerClient:
 #
     #    headers = {
     #        "Accept": "application/json",
-    #        "Authorization": f"Bearer {self.access_token}"
+    #        "Authorization": f"Bearer {self.auth.token}"
     #    }
 #
     #    response = requests.get(url, headers=headers)
@@ -213,7 +213,7 @@ class TrueLayerClient:
 #
     #    headers = {
     #        "Accept": "application/json",
-    #        "Authorization": f"Bearer {self.access_token}"
+    #        "Authorization": f"Bearer {self.auth.token}"
     #    }
 #
     #    response = requests.get(url, headers=headers)

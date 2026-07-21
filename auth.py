@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+from datetime import datetime, timezone, timedelta
 
 class TrueLayerAuth:
     def __init__(self):
@@ -17,6 +18,7 @@ class TrueLayerAuth:
         self.redirect_uri = "https://console.truelayer.com/redirect-page"
         self.access_token = None
         self.refresh_token = None
+        self.token_expiry = None
 
     def get_auth_link(self):
         # get a link to authenticate with bank provider
@@ -61,6 +63,11 @@ class TrueLayerAuth:
         data = response.json()
         self.access_token = data["access_token"]
         self.refresh_token = data["refresh_token"]
+        
+        current_time = datetime.now(timezone.utc)
+        delta = timedelta(seconds=int(data["expires_in"]))
+        self.token_expiry = current_time + delta
+        
         self.save_token()
 
         return self.access_token
@@ -82,6 +89,11 @@ class TrueLayerAuth:
         data = response.json()
         self.access_token = data["access_token"]
         self.refresh_token = data["refresh_token"]
+        
+        current_time = datetime.now(timezone.utc)
+        delta = timedelta(seconds=int(data["expires_in"]))
+        self.token_expiry = current_time + delta
+        
         self.save_token()
 
         return self.access_token
@@ -90,7 +102,8 @@ class TrueLayerAuth:
     def save_token(self):
         token_data = {
                       "access_token": self.access_token,
-                      "refresh_token": self.refresh_token
+                      "refresh_token": self.refresh_token,
+                      "token_expiry": str(self.token_expiry)
                       }
         with open("token.json", "w") as f:
             json.dump(token_data, f)
@@ -101,10 +114,25 @@ class TrueLayerAuth:
                 data = json.load(f)
                 self.access_token = data["access_token"]
                 self.refresh_token = data["refresh_token"]
+                self.token_expiry = datetime.fromisoformat(data["token_expiry"])
                 return data
                 
+        except json.decoder.JSONDecodeError:
+            return None
         except FileNotFoundError:
             return None
+            
+    
+    @property
+    def token(self) -> str:
+        if self.access_token and not self.expired(self.token_expiry):
+            return self.access_token
+        self.load_token()
+        if self.refresh_token:
+            return self.refresh_access_token()
+        
+        raise Exception("Cannot get token")
+            
 
     def token_is_valid(self, token):
         try:
@@ -120,6 +148,12 @@ class TrueLayerAuth:
             return True
         except requests.RequestException:
             return False
+    
+    def expired(self, expiry):
+        now = datetime.now(timezone.utc)
+        now += timedelta(minutes=3)
+        
+        return expiry <= now
     
     def login(self):
         # load tokens from file
