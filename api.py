@@ -51,6 +51,7 @@ class TrueLayerClient:
             timestamp = datetime.fromisoformat(timestamp)
         
         balance = Balance(
+            account_id=account_id,
             currency=b["currency"],
             current=b["current"],
             available=b.get("available"),

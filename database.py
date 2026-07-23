@@ -1,6 +1,6 @@
 import os
 import psycopg2
-from models import Transaction, Account, RunningBalance
+from models import Balance, RunningBalance, Transaction, Account
 
 
 def get_connection():
@@ -12,6 +12,93 @@ def get_connection():
         password=os.environ["DB_PASSWORD"]
     )
 
+class BalanceDb:
+    def __enter__(self):
+        self.conn = get_connection()
+        self.cursor = self.conn.cursor()
+        self.create_table()
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.conn.close()
+        
+    def create_table(self):
+        query = """
+        CREATE TABLE IF NOT EXISTS balances (
+            account_id TEXT PRIMARY KEY,
+            currency TEXT NOT NULL,
+            current NUMERIC(12,2) NOT NULL,
+            available NUMERIC(12,2),
+            update_timestamp TIMESTAMPTZ
+        );
+        """
+        
+        try:
+            self.cursor.execute(query)
+            self.conn.commit()
+            
+        except Exception:
+            self.conn.rollback()
+            raise
+        
+    def insert_balance(self, balance: Balance):
+        query = """
+        INSERT INTO balances (
+            account_id,
+            currency,
+            current,
+            available,
+            update_timestamp
+        )
+        VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (account_id) DO UPDATE SET
+            currency = EXCLUDED.currency,
+            current = EXCLUDED.current,
+            available = EXCLUDED.available,
+            update_timestamp = EXCLUDED.update_timestamp;
+        """
+        
+        try:
+            self.cursor.execute(query, (
+                balance.account_id,
+                balance.currency,
+                balance.current,
+                balance.available,
+                balance.update_timestamp
+                ))
+            self.conn.commit()
+            
+        except Exception:
+            self.conn.rollback()
+            raise
+        
+    def get_balance(self, account_id: str) -> Balance:
+        query = """
+        SELECT * FROM balances WHERE account_id = %s;
+        """
+
+        try:
+            self.cursor.execute(query, (account_id,))
+            record = self.cursor.fetchone()
+            
+            if record is None:
+                raise Exception("No balance found for account")
+
+            balance = Balance(
+                account_id=record[0],
+                currency=record[1],
+                current=record[2],
+                available=record[3],
+                update_timestamp=record[4]
+            )
+                
+            print("Balance fetched")
+            return balance
+                
+        except Exception:
+            self.conn.rollback()
+            raise
+        
 class AccountDb:
     def __enter__(self):
         self.conn = get_connection()
@@ -59,7 +146,6 @@ class AccountDb:
         """
         
         try:
-            inserted = 0
             for a in accounts:
                 self.cursor.execute(query, (
                     a.account_id,
@@ -172,7 +258,6 @@ class TransactionDb:
         """
         
         try:
-            inserted = 0
             for t in transactions:
                 self.cursor.execute(query, (
                     t.transaction_id,

@@ -68,6 +68,7 @@ class Account:
 
 @dataclass
 class Balance:
+    account_id: str
     currency: Currency
     current: Decimal
     available: Decimal | None = None

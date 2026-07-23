@@ -1,7 +1,17 @@
-from database import AccountDb, TransactionDb
+from database import AccountDb, TransactionDb, BalanceDb
 from api import TrueLayerClient
-from models import Transaction, Account
+from models import Transaction, Account, Balance
 
+class BalanceRepository:
+    def __init__(self, client: TrueLayerClient):
+        self.client = client
+    
+    def get_balance(self, account_id: str) -> Balance:
+        balance = self.client.get_balance(account_id)
+        with BalanceDb() as db:
+            db.insert_balance(balance)
+        return balance
+    
 class AccountRepository:
     def __init__(self, client: TrueLayerClient):
         self.client = client

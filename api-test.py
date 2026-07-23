@@ -2,7 +2,7 @@ from prettytable import PrettyTable
 import pyfiglet
 from api import TrueLayerClient
 from auth import TrueLayerAuth
-from repositories import AccountRepository, TransactionRepository
+from repositories import AccountRepository, TransactionRepository, BalanceRepository
 
 text = "CASHDIVE"
 ascii_art = pyfiglet.figlet_format(text, font="slant")
@@ -36,7 +36,8 @@ def print_balance(id):
     print(f"Balance for {id}")
     table = PrettyTable(["Currency", "Available", "Current"])
 
-    b = client.get_balance(id)
+    balance_repo = BalanceRepository(client)
+    b = balance_repo.get_balance(id)
 
     table.add_row([
         b.currency,
