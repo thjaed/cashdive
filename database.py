@@ -315,3 +315,18 @@ class TransactionDb:
         except Exception:
             self.conn.rollback()
             raise
+    
+    def delete_pending_transactions(self, account_id: str) -> None:
+        query = """
+        DELETE FROM transactions
+        WHERE account_id = %s
+            AND pending = TRUE;
+        """
+        
+        try:
+            self.cursor.execute(query, (account_id,))
+            self.conn.commit()
+            
+        except Exception:
+            self.conn.rollback()
+            raise

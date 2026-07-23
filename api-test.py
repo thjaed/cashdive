@@ -48,7 +48,7 @@ def print_balance(id):
 
 def print_transactions(id):
     print(f"Transactions for {id}")
-    table = PrettyTable(["Amount", "Currency", "Description", "Date", "Running Balance"])
+    table = PrettyTable(["Amount", "Currency", "Description", "Date", "Pending", "Running Balance"])
 
     transaction_repo = TransactionRepository(client)
     transactions = transaction_repo.get_transactions(id)
@@ -59,6 +59,7 @@ def print_transactions(id):
             t.currency,
             t.description,
             t.timestamp.strftime("%A %d %B %Y"),
+            t.pending,
             t.running_balance.amount]
         )
     print(table)

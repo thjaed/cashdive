@@ -28,6 +28,11 @@ class TransactionRepository:
     
     def get_transactions(self, account_id: str) -> list[Transaction]:
         transactions = self.client.get_transactions(account_id)
+        pending_transactions = self.client.get_pending_transactions(account_id)
+        
+        all_transactions = pending_transactions + transactions
+        
         with TransactionDb() as db:
-            db.insert_transactions(transactions)
-        return transactions
+            db.delete_pending_transactions(account_id)
+            db.insert_transactions(all_transactions)
+            return db.get_transactions(account_id)
