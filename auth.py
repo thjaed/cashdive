@@ -40,7 +40,7 @@ class TrueLayerAuth:
             "provider_id": "mock"
         }
 
-        response = requests.post(url, json=payload, headers=headers)
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
         response.raise_for_status()
         return response.json()["result"]
 
@@ -57,7 +57,7 @@ class TrueLayerAuth:
             "code": code
         }
 
-        response = requests.post(url, data=data)
+        response = requests.post(url, data=data, timeout=10)
         response.raise_for_status()
 
         data = response.json()
@@ -83,7 +83,7 @@ class TrueLayerAuth:
             "refresh_token": self.refresh_token
         }
 
-        response = requests.post(url, data=data)
+        response = requests.post(url, data=data, timeout=10)
         response.raise_for_status()
 
         data = response.json()
@@ -143,7 +143,7 @@ class TrueLayerAuth:
                 "Authorization": f"Bearer {token}"
             }
 
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             return True
         except requests.RequestException:

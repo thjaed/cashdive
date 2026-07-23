@@ -1,5 +1,6 @@
 import requests
-from models import *
+from datetime import datetime
+from models import Account, Transaction, Balance, RunningBalance
 
 class TrueLayerClient:
     def __init__(self, auth):
@@ -13,7 +14,7 @@ class TrueLayerClient:
             "Authorization": f"Bearer {self.auth.token}"
         }
 
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         
         data = response.json()["results"]
@@ -25,7 +26,9 @@ class TrueLayerClient:
                 account_type=a["account_type"],
                 display_name=a["display_name"],
                 currency=a["currency"],
-                update_timestamp=a["update_timestamp"]                
+                update_timestamp=datetime.fromisoformat(
+                    a["update_timestamp"]
+                )
             ))
             
         return accounts
@@ -38,13 +41,13 @@ class TrueLayerClient:
             "Authorization": f"Bearer {self.auth.token}"
         }
 
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         
         b = response.json()["results"][0]
         
         timestamp = b.get("update_timestamp")
-        if timestamp:
+        if timestamp is not None:
             timestamp = datetime.fromisoformat(timestamp)
         
         balance = Balance(
@@ -64,7 +67,7 @@ class TrueLayerClient:
             "Authorization": f"Bearer {self.auth.token}"
         }
 
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         
         data = response.json()["results"]
@@ -72,7 +75,11 @@ class TrueLayerClient:
         transactions = []
         for t in data:
             rb = t.get("running_balance")
-            if rb and rb.get("amount") and rb.get("currency"):
+            if (
+                rb
+                and rb.get("amount") is not None
+                and rb.get("currency") is not None
+            ):
                 running_balance = RunningBalance(
                         amount=rb["amount"],
                         currency=rb["currency"]
@@ -82,6 +89,7 @@ class TrueLayerClient:
             
             transactions.append(Transaction(
                 transaction_id=t["transaction_id"],
+                account_id=account_id,
                 timestamp=datetime.fromisoformat(t["timestamp"]),
                 description=t["description"],
                 amount=t["amount"],
@@ -92,7 +100,6 @@ class TrueLayerClient:
                 merchant_name=t.get("merchant_name"),
                 running_balance=running_balance,
                 pending=False
-                
             ))
         return transactions
     
@@ -104,7 +111,7 @@ class TrueLayerClient:
             "Authorization": f"Bearer {self.auth.token}"
         }
 
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         
         data = response.json()["results"]
@@ -112,7 +119,11 @@ class TrueLayerClient:
         transactions = []
         for t in data:
             rb = t.get("running_balance")
-            if rb and rb.get("amount") and rb.get("currency"):
+            if (
+                rb
+                and rb.get("amount") is not None
+                and rb.get("currency") is not None
+            ):
                 running_balance = RunningBalance(
                         amount=rb["amount"],
                         currency=rb["currency"]
@@ -122,6 +133,7 @@ class TrueLayerClient:
             
             transactions.append(Transaction(
                 transaction_id=t["transaction_id"],
+                account_id=account_id,
                 timestamp=datetime.fromisoformat(t["timestamp"]),
                 description=t["description"],
                 amount=t["amount"],
@@ -132,7 +144,6 @@ class TrueLayerClient:
                 merchant_name=t.get("merchant_name"),
                 running_balance=running_balance,
                 pending=True
-                
             ))
         return transactions
     

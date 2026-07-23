@@ -1,8 +1,17 @@
-from database import TransactionDb
+from database import AccountDb, TransactionDb
 from api import TrueLayerClient
-from models import Transaction
+from models import Transaction, Account
 
-
+class AccountRepository:
+    def __init__(self, client: TrueLayerClient):
+        self.client = client
+    
+    def get_accounts(self) -> list[Account]:
+        accounts = self.client.get_accounts()
+        with AccountDb() as db:
+            db.insert_accounts(accounts)
+        return accounts
+    
 class TransactionRepository:
     def __init__(self, client: TrueLayerClient):
         self.client = client
@@ -12,23 +21,3 @@ class TransactionRepository:
         with TransactionDb() as db:
             db.insert_transactions(transactions)
         return transactions
-        
-        
-def test():
-    from prettytable import PrettyTable
-    
-    with TransactionDb() as db:
-        transactions = db.get_transactions()
-
-    table = PrettyTable(["Amount", "Currency", "Description", "Date", "Running Balance"])
-
-    for t in transactions:
-            table.add_row([
-                t.amount,
-                t.currency,
-                t.description,
-                t.timestamp.strftime("%A %d %B %Y"),
-                t.running_balance.amount]
-            )
-
-    print(table)

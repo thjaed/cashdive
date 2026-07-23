@@ -40,6 +40,7 @@ class RunningBalance:
 @dataclass
 class Transaction:
     transaction_id: str
+    account_id: str
     timestamp: datetime
     description: str
     amount: Decimal
@@ -54,8 +55,8 @@ class Transaction:
 class AccountType(Enum):
     TRANSACTION = "TRANSACTION"
     SAVINGS = "SAVINGS"
-    BUISNESS_TRANSACTION = "BUISNESS_TRANSACTION"
-    BUISNESS_SAVINGS = "BUISNESS_SAVINGS"
+    BUISNESS_TRANSACTION = "BUSINESS_TRANSACTION"
+    BUISNESS_SAVINGS = "BUSINESS_SAVINGS"
     
 @dataclass
 class Account:

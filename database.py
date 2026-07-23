@@ -1,6 +1,6 @@
 import os
 import psycopg2
-from models import Transaction, RunningBalance
+from models import Transaction, Account, RunningBalance
 
 
 def get_connection():
@@ -12,10 +12,100 @@ def get_connection():
         password=os.environ["DB_PASSWORD"]
     )
 
+class AccountDb:
+    def __enter__(self):
+        self.conn = get_connection()
+        self.cursor = self.conn.cursor()
+        self.create_table()
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.conn.close()
+        
+    def create_table(self):
+        query = """
+        CREATE TABLE IF NOT EXISTS accounts (
+            account_id TEXT PRIMARY KEY,
+            account_type TEXT NOT NULL,
+            display_name TEXT NOT NULL,
+            currency TEXT NOT NULL,
+            update_timestamp TIMESTAMPTZ NOT NULL
+        );
+        """
+        
+        try:
+            self.cursor.execute(query)
+            self.conn.commit()
+            
+        except Exception:
+            self.conn.rollback()
+            raise
+        
+    def insert_accounts(self, accounts: list[Account]):
+        query = """
+        INSERT INTO accounts (
+            account_id,
+            account_type,
+            display_name,
+            currency,
+            update_timestamp
+        )
+        VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (account_id) DO UPDATE SET
+            account_type = EXCLUDED.account_type,
+            display_name = EXCLUDED.display_name,
+            currency = EXCLUDED.currency,
+            update_timestamp = EXCLUDED.update_timestamp;
+        """
+        
+        try:
+            inserted = 0
+            for a in accounts:
+                self.cursor.execute(query, (
+                    a.account_id,
+                    a.account_type,
+                    a.display_name,
+                    a.currency,
+                    a.update_timestamp
+                ))
+            self.conn.commit()
+            
+        except Exception:
+            self.conn.rollback()
+            raise
+        
+    def get_accounts(self) -> list[Account]:
+        query = """
+        SELECT * FROM accounts;
+        """
+
+        try:
+            self.cursor.execute(query)
+            records = self.cursor.fetchall()
+            
+            accounts: list[Account] = []
+            
+            for record in records:
+                accounts.append(Account(
+                    account_id=record[0],
+                    account_type=record[1],
+                    display_name=record[2],
+                    currency=record[3],
+                    update_timestamp=record[4]
+                ))
+                
+            print("Accounts fetched")
+            return accounts
+                
+        except Exception:
+            self.conn.rollback()
+            raise
+
 class TransactionDb:
     def __enter__(self):
         self.conn = get_connection()
         self.cursor = self.conn.cursor()
+        self.create_table()
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
@@ -25,6 +115,7 @@ class TransactionDb:
         query = """
         CREATE TABLE IF NOT EXISTS transactions (
             transaction_id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
             transaction_timestamp TIMESTAMPTZ NOT NULL,
             description TEXT NOT NULL,
             amount NUMERIC(12,2) NOT NULL,
@@ -42,14 +133,16 @@ class TransactionDb:
         try:
             self.cursor.execute(query)
             self.conn.commit()
-            print("Transaction table created")
-        except Exception as e:
-            print(f"An error occured creating the table: {e}")
+            
+        except Exception:
+            self.conn.rollback()
+            raise
         
     def insert_transactions(self, transactions: list[Transaction]):
         query = """
         INSERT INTO transactions (
             transaction_id,
+            account_id,
             transaction_timestamp,
             description,
             amount,
@@ -62,8 +155,20 @@ class TransactionDb:
             pending,
             merchant_name
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ON CONFLICT (transaction_id) DO NOTHING;
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (transaction_id) DO UPDATE SET
+            account_id = EXCLUDED.account_id,
+            transaction_timestamp = EXCLUDED.transaction_timestamp,
+            description = EXCLUDED.description,
+            amount = EXCLUDED.amount,
+            currency = EXCLUDED.currency,
+            transaction_type = EXCLUDED.transaction_type,
+            transaction_category = EXCLUDED.transaction_category,
+            transaction_classification = EXCLUDED.transaction_classification,
+            running_balance_amount = EXCLUDED.running_balance_amount,
+            running_balance_currency = EXCLUDED.running_balance_currency,
+            pending = EXCLUDED.pending,
+            merchant_name = EXCLUDED.merchant_name;
         """
         
         try:
@@ -71,6 +176,7 @@ class TransactionDb:
             for t in transactions:
                 self.cursor.execute(query, (
                     t.transaction_id,
+                    t.account_id,
                     t.timestamp,
                     t.description,
                     t.amount,
@@ -83,20 +189,21 @@ class TransactionDb:
                     t.pending,
                     t.merchant_name
                 ))
-                inserted += self.cursor.rowcount
             self.conn.commit()
-            print(f"{inserted} transactions inserted")
             
-        except Exception as e:
-            print(f"An error occured inserting transactions: {e}")
+        except Exception:
+            self.conn.rollback()
+            raise
         
-    def get_transactions(self) -> list[Transaction]:
+    def get_transactions(self, account_id: str) -> list[Transaction]:
         query = """
-        SELECT * FROM transactions;
+        SELECT * FROM transactions
+        WHERE account_id = %s
+        ORDER BY transaction_timestamp DESC;
         """
 
         try:
-            self.cursor.execute(query)
+            self.cursor.execute(query, (account_id,))
             records = self.cursor.fetchall()
             
             transactions: list[Transaction] = []
@@ -104,21 +211,22 @@ class TransactionDb:
             for record in records:
                 transactions.append(Transaction(
                     transaction_id=record[0],
-                    timestamp=record[1],
-                    description=record[2],
-                    amount=record[3],
-                    currency=record[4],
-                    transaction_type=record[5],
-                    transaction_category=record[6],
-                    transaction_classification=record[7],
-                    running_balance=RunningBalance(record[8], record[9]),
-                    pending=record[10],
-                    merchant_name=record[11]
+                    account_id=record[1],
+                    timestamp=record[2],
+                    description=record[3],
+                    amount=record[4],
+                    currency=record[5],
+                    transaction_type=record[6],
+                    transaction_category=record[7],
+                    transaction_classification=record[8],
+                    running_balance=RunningBalance(record[9], record[10]),
+                    pending=record[11],
+                    merchant_name=record[12]
                 ))
                 
             print("Transactions fetched")
             return transactions
                 
-        except Exception as e:
-            print(f"An error occured getting transactions: {e}")
-            return []
+        except Exception:
+            self.conn.rollback()
+            raise

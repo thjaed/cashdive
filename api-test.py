@@ -2,7 +2,7 @@ from prettytable import PrettyTable
 import pyfiglet
 from api import TrueLayerClient
 from auth import TrueLayerAuth
-from repositories import TransactionRepository
+from repositories import AccountRepository, TransactionRepository
 
 text = "CASHDIVE"
 ascii_art = pyfiglet.figlet_format(text, font="slant")
@@ -20,7 +20,8 @@ def print_accounts():
     print("Accounts")
     table = PrettyTable(["Name", "Type", "Currency", "ID"])
 
-    accounts = client.get_accounts()
+    accounts_repo = AccountRepository(client)
+    accounts = accounts_repo.get_accounts()
 
     for a in accounts:
         table.add_row([
@@ -29,7 +30,6 @@ def print_accounts():
             a.currency,
             a.account_id
         ])
-
     print(table)
 
 def print_balance(id):
@@ -43,13 +43,13 @@ def print_balance(id):
         b.available,
         b.current
     ])
-
     print(table)
 
 def print_transactions(id):
     print(f"Transactions for {id}")
     table = PrettyTable(["Amount", "Currency", "Description", "Date", "Running Balance"])
 
+    transaction_repo = TransactionRepository(client)
     transactions = transaction_repo.get_transactions(id)
 
     for t in transactions:
@@ -60,11 +60,9 @@ def print_transactions(id):
             t.timestamp.strftime("%A %d %B %Y"),
             t.running_balance.amount]
         )
-
     print(table)
 
 auth = TrueLayerAuth()
-
 if not auth.login():
     print(auth.get_auth_link())
 
@@ -72,8 +70,6 @@ if not auth.login():
     auth.exchange_code(code)
 
 client = TrueLayerClient(auth)
-
-transaction_repo = TransactionRepository(client)
 
 print_accounts()
 
