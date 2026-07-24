@@ -1,5 +1,6 @@
 import os
 import psycopg2
+from datetime import datetime, timezone
 from models import Balance, RunningBalance, Transaction, Account
 
 
@@ -92,7 +93,6 @@ class BalanceDb:
                 update_timestamp=record[4]
             )
                 
-            print("Balance fetched")
             return balance
                 
         except Exception:
@@ -128,8 +128,14 @@ class AccountDb:
             self.conn.rollback()
             raise
         
-    def insert_accounts(self, accounts: list[Account]):
-        query = """
+    def update(self, accounts: list[Account]):
+        account_ids = [a.account_id for a in accounts]
+        delete_query = """
+        DELETE FROM accounts
+        WHERE NOT (account_id = ANY(%s::text[]));
+        """
+        
+        insert_query = """
         INSERT INTO accounts (
             account_id,
             account_type,
@@ -146,8 +152,9 @@ class AccountDb:
         """
         
         try:
+            self.cursor.execute(delete_query, (account_ids,))
             for a in accounts:
-                self.cursor.execute(query, (
+                self.cursor.execute(insert_query, (
                     a.account_id,
                     a.account_type,
                     a.display_name,
@@ -180,7 +187,6 @@ class AccountDb:
                     update_timestamp=record[4]
                 ))
                 
-            print("Accounts fetched")
             return accounts
                 
         except Exception:
@@ -309,7 +315,6 @@ class TransactionDb:
                     merchant_name=record[12]
                 ))
                 
-            print("Transactions fetched")
             return transactions
                 
         except Exception:
@@ -327,6 +332,88 @@ class TransactionDb:
             self.cursor.execute(query, (account_id,))
             self.conn.commit()
             
+        except Exception:
+            self.conn.rollback()
+            raise
+
+class CacheExpiryDb:
+    def __enter__(self):
+        self.conn = get_connection()
+        self.cursor = self.conn.cursor()
+        self.create_table()
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.conn.close()
+    
+    def create_table(self) -> None:
+        query = """
+        CREATE TABLE IF NOT EXISTS cache_expiry (
+            cache_key TEXT PRIMARY KEY,
+            expiry TIMESTAMPTZ NOT NULL
+        );
+        """
+        
+        try:
+            self.cursor.execute(query)
+            self.conn.commit()
+                    
+        except Exception:
+            self.conn.rollback()
+            raise
+    
+    def update(self, cache_key: str, expiry: str) -> None:
+        query = """
+        INSERT INTO cache_expiry (
+            cache_key,
+            expiry
+        )
+        VALUES (%s, NOW() + INTERVAL %s)
+        ON CONFLICT (cache_key) DO UPDATE SET
+            expiry = EXCLUDED.expiry;
+        """
+                
+        try:
+            self.cursor.execute(query, (
+                cache_key,
+                expiry
+            ))
+            self.conn.commit()
+            
+        except Exception:
+            self.conn.rollback()
+            raise
+    
+    def has_expired(self, cache_key: str) -> bool:
+            query = """
+            SELECT expiry <= NOW()
+            FROM cache_expiry
+            WHERE cache_key = %s;
+            """
+    
+            try:
+                self.cursor.execute(query, (cache_key,))
+                record = self.cursor.fetchone()
+                
+                if record is None:
+                    return True
+                
+                return record[0]
+            
+            except Exception:
+                self.conn.rollback()
+                raise
+    
+    def cleanup(self) -> None:
+        query = """
+        DELETE FROM cache_expiry
+        WHERE expiry < NOW() - INTERVAL '1 week';
+        """
+        
+        try:
+            self.cursor.execute(query)
+            self.conn.commit()
+                    
         except Exception:
             self.conn.rollback()
             raise
