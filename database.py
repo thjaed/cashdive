@@ -38,7 +38,7 @@ class BalanceDb:
             self.cursor.execute(query)
             self.conn.commit()
             
-        except Exception:
+        except:
             self.conn.rollback()
             raise
         
@@ -69,7 +69,7 @@ class BalanceDb:
                 ))
             self.conn.commit()
             
-        except Exception:
+        except:
             self.conn.rollback()
             raise
         
@@ -95,7 +95,7 @@ class BalanceDb:
                 
             return balance
                 
-        except Exception:
+        except:
             self.conn.rollback()
             raise
         
@@ -124,7 +124,7 @@ class AccountDb:
             self.cursor.execute(query)
             self.conn.commit()
             
-        except Exception:
+        except:
             self.conn.rollback()
             raise
         
@@ -163,7 +163,7 @@ class AccountDb:
                 ))
             self.conn.commit()
             
-        except Exception:
+        except:
             self.conn.rollback()
             raise
         
@@ -189,7 +189,7 @@ class AccountDb:
                 
             return accounts
                 
-        except Exception:
+        except:
             self.conn.rollback()
             raise
 
@@ -226,7 +226,7 @@ class TransactionDb:
             self.cursor.execute(query)
             self.conn.commit()
             
-        except Exception:
+        except:
             self.conn.rollback()
             raise
         
@@ -282,7 +282,7 @@ class TransactionDb:
                 ))
             self.conn.commit()
             
-        except Exception:
+        except:
             self.conn.rollback()
             raise
         
@@ -317,7 +317,7 @@ class TransactionDb:
                 
             return transactions
                 
-        except Exception:
+        except:
             self.conn.rollback()
             raise
     
@@ -332,7 +332,7 @@ class TransactionDb:
             self.cursor.execute(query, (account_id,))
             self.conn.commit()
             
-        except Exception:
+        except:
             self.conn.rollback()
             raise
 
@@ -358,7 +358,7 @@ class CacheExpiryDb:
             self.cursor.execute(query)
             self.conn.commit()
                     
-        except Exception:
+        except:
             self.conn.rollback()
             raise
     
@@ -380,7 +380,7 @@ class CacheExpiryDb:
             ))
             self.conn.commit()
             
-        except Exception:
+        except:
             self.conn.rollback()
             raise
     
@@ -400,7 +400,7 @@ class CacheExpiryDb:
                 
                 return record[0]
             
-            except Exception:
+            except:
                 self.conn.rollback()
                 raise
     
@@ -414,6 +414,6 @@ class CacheExpiryDb:
             self.cursor.execute(query)
             self.conn.commit()
                     
-        except Exception:
+        except:
             self.conn.rollback()
             raise

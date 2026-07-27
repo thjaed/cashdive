@@ -125,13 +125,15 @@ class TrueLayerAuth:
     
     @property
     def token(self) -> str:
+        self.load_token()
+        
         if self.access_token and not self.expired(self.token_expiry):
             return self.access_token
-        self.load_token()
+        
         if self.refresh_token:
             return self.refresh_access_token()
         
-        raise Exception("Cannot get token")
+        raise RuntimeError("Cannot get token")
             
 
     def token_is_valid(self, token):
