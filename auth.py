@@ -2,6 +2,7 @@ import os
 import requests
 import json
 from datetime import datetime, timezone, timedelta
+from urllib.parse import urlencode
 
 class TrueLayerAuth:
     def __init__(self):
@@ -15,35 +16,26 @@ class TrueLayerAuth:
         elif self.client_secret == None:
             raise Exception("CLIENT_SECRET environment variable not set")
         
-        self.redirect_uri = "https://console.truelayer.com/redirect-page"
+        self.redirect_uri = "http://localhost:8000/auth/callback"
         self.access_token = None
         self.refresh_token = None
         self.token_expiry = None
 
-    def get_auth_link(self):
+    def get_auth_link(self) -> str:
         # get a link to authenticate with bank provider
-        url = "https://auth.truelayer-sandbox.com/v1/authuri"
-
-        headers = {
-            "accept": "application/json",
-            "content-type": "application/json"
-        }
-
-        payload = {
+        params = {
             "response_type": "code",
             "client_id": self.client_id,
-            "client_secret": self.client_secret,
             "redirect_uri": self.redirect_uri,
             "scope": "info accounts balance transactions offline_access",
-            "state": "abcddd",
-            "consent_id": "edfgfgh",
-            "provider_id": "mock"
+            "providers": "uk-cs-mock"
         }
-
-        response = requests.post(url, json=payload, headers=headers, timeout=10)
-        response.raise_for_status()
-        return response.json()["result"]
-
+        
+        url = (
+            "https://auth.truelayer-sandbox.com/?"
+            + urlencode(params)
+        )
+        return url
 
     def exchange_code(self, code):
         # exchange code from auth link for access & refresh tokens

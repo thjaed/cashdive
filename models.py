@@ -73,3 +73,11 @@ class Balance:
     current: Decimal
     available: Decimal | None = None
     update_timestamp: datetime | None = None
+
+@dataclass
+class AuthStatus:
+    connected: bool
+
+@dataclass
+class AuthCallback:
+    success: bool
