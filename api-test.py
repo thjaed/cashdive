@@ -66,7 +66,7 @@ def print_transactions(id):
 
 auth = TrueLayerAuth()
 if not auth.login():
-    print(auth.get_auth_link())
+    print(auth.get_auth_link(state="abcdefg"))
 
     code = input("Code: ")
     auth.exchange_code(code)

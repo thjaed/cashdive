@@ -21,13 +21,14 @@ class TrueLayerAuth:
         self.refresh_token = None
         self.token_expiry = None
 
-    def get_auth_link(self) -> str:
+    def get_auth_link(self, state: str) -> str:
         # get a link to authenticate with bank provider
         params = {
             "response_type": "code",
             "client_id": self.client_id,
             "redirect_uri": self.redirect_uri,
             "scope": "info accounts balance transactions offline_access",
+            "state": state,
             "providers": "uk-cs-mock"
         }
         

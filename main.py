@@ -1,12 +1,23 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from api import TrueLayerClient
 from auth import TrueLayerAuth
 from repositories import AccountRepository, TransactionRepository, BalanceRepository
 from models import Account, Balance, Transaction, AuthStatus, AuthCallback
 from requests.exceptions import HTTPError
+import secrets
+import os
+from starlette.middleware.sessions import SessionMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.environ["SESSION_SECRET"],
+    same_site="lax",
+    https_only=False,
+    max_age=900
+)
 
 @app.get(
     "/accounts",
@@ -107,10 +118,14 @@ def auth_status() -> AuthStatus:
 @app.get(
     "/auth/start"
 )
-def start_auth() -> RedirectResponse:
+def start_auth(request: Request) -> RedirectResponse:
     # Redirect to TrueLayer bank login
+    state = secrets.token_urlsafe(32)
+    
+    request.session["oauth_state"] = state
+    
     auth = TrueLayerAuth()
-    auth_url = auth.get_auth_link()
+    auth_url = auth.get_auth_link(state)
     
     return RedirectResponse(auth_url)
     
@@ -118,12 +133,34 @@ def start_auth() -> RedirectResponse:
     "/auth/callback",
     response_model=AuthCallback
 )
-def auth_callback(code: str, scope: str | None = None) -> AuthCallback:
+def auth_callback(
+    request: Request,
+    code: str,
+    state: str,
+    scope: str | None = None
+) -> AuthCallback:
     # Exchange code given by TrueLayer
-    auth = TrueLayerAuth()
+    expected_state = request.session.pop(
+        "oauth_state",
+        None
+    )
     
-    if not code:
-        print("no code")
+    if expected_state is None:
+        raise HTTPException(
+            400,
+            detail="Authentication session missing or expired"
+        )
+    
+    if not secrets.compare_digest(
+        state,
+        expected_state
+    ):
+        raise HTTPException(
+            400,
+            detail="Invalid authentication state"
+        )
+    
+    auth = TrueLayerAuth()
     
     try:
         auth.exchange_code(code)

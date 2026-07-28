@@ -13,6 +13,7 @@ dependencies = [
     "requests",
     "prettytable",
     "pyfiglet",
+    "itsdangerous"
 ]
 
 [project.optional-dependencies]
