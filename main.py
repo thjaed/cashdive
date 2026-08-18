@@ -131,14 +131,13 @@ def start_auth(request: Request) -> RedirectResponse:
     
 @app.get(
     "/auth/callback",
-    response_model=AuthCallback
 )
 def auth_callback(
     request: Request,
     code: str,
     state: str,
     scope: str | None = None
-) -> AuthCallback:
+) -> RedirectResponse:
     # Exchange code given by TrueLayer
     expected_state = request.session.pop(
         "oauth_state",
@@ -175,4 +174,4 @@ def auth_callback(
         
         raise HTTPException(502)
     
-    return AuthCallback(success=True)
+    return RedirectResponse("http://localhost:3000/")

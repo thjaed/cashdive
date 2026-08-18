@@ -32,6 +32,12 @@ class TransactionCategory(Enum):
     DEBIT = "DEBIT"
     UNKNOWN = "UNKNOWN"
 
+class AccountType(Enum):
+    TRANSACTION = "TRANSACTION"
+    SAVINGS = "SAVINGS"
+    BUSISNESS_TRANSACTION = "BUSINESS_TRANSACTION"
+    BUSINESS_SAVINGS = "BUSINESS_SAVINGS"
+
 @dataclass
 class RunningBalance:
     amount: Decimal | None = None
@@ -51,12 +57,6 @@ class Transaction:
     running_balance: RunningBalance
     pending: bool
     merchant_name: str | None = None
-
-class AccountType(Enum):
-    TRANSACTION = "TRANSACTION"
-    SAVINGS = "SAVINGS"
-    BUISNESS_TRANSACTION = "BUSINESS_TRANSACTION"
-    BUISNESS_SAVINGS = "BUSINESS_SAVINGS"
     
 @dataclass
 class Account:
