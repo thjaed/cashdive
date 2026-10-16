@@ -18,38 +18,34 @@ export default async function Home() {
   }
 
   return (
-    <main>
-      <h1>CashDive</h1>
-
-      {connected ? (
-        <h1>Your Accounts</h1>
-      ) : (
+    <main className="min-h-screen bg-gray-900 px-4 py-12 text-slate-100">
+      {!connected ? (
+        //not connected to bank
         <>
           <h1>Not connected to your bank.</h1>
           <Link href="http://localhost:8000/auth/start">Connect Here</Link>
         </>
-      )}
+      ) : (
+        // connected to bank
+        <>
+          <div className="mx-auto w-full max-w-2xl">
+            <h1 className="mb-6 text-2xl font-bold tracking-tight">Your Accounts</h1>
 
-      {connected && (
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Currency</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {accounts.map((account: Account) => (
-              <tr key={account.account_id}>
-                <td>{account.display_name}</td>
-                <td>{account.account_type}</td>
-                <td>{account.currency}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            <ul className="divide-y divide-black overflow-hidden border border-black bg-slate-800">
+              {accounts.map((account: Account) => (
+                <li key={account.account_id}>
+                  <Link href={`/accounts/${account.account_id}`} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500">
+                    <div>
+                      <div className="font-semibold text-gray-100">{account.display_name}</div>
+                      <div className="mt-1 text-sm text-gray-400">{account.account_type}</div>
+                    </div>
+                      <div className="ml-auto shrink-0 text-sm font-medium text-gray-300">{account.currency}</div>                    
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </>
       )}
     </main>
   );
