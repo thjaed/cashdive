@@ -55,7 +55,7 @@ class TransactionRepository:
     def __init__(self, client: TrueLayerClient):
         self.client = client
     
-    def get_transactions(self, account_id: str) -> list[Transaction]:
+    def get_transactions(self, account_id: str, skip: int, limit: int) -> list[Transaction]:
         cache_key = f"transactions:{account_id}"
         
         with CacheExpiryDb() as db:
@@ -63,7 +63,7 @@ class TransactionRepository:
         
         if not expired:
             with TransactionDb() as db:
-                return db.get_transactions(account_id)
+                return db.get_transactions(account_id, skip, limit)
         
         complete_transactions = self.client.get_transactions(account_id)
         pending_transactions = self.client.get_pending_transactions(account_id)
@@ -73,10 +73,13 @@ class TransactionRepository:
         with TransactionDb() as db:
             db.delete_pending_transactions(account_id)
             db.insert_transactions(all_transactions)
-            transactions = db.get_transactions(account_id)
+            transactions = db.get_transactions(account_id, skip, limit)
         
         with CacheExpiryDb() as db:
             db.update(cache_key, '3 minutes')
         
         return transactions
         
+    def get_transaction_count(self, account_id: str) -> int:
+        with TransactionDb() as db:
+            return db.get_transaction_count(account_id)

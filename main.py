@@ -3,11 +3,12 @@ from fastapi.responses import RedirectResponse
 from api import TrueLayerClient
 from auth import TrueLayerAuth
 from repositories import AccountRepository, TransactionRepository, BalanceRepository
-from models import Account, Balance, Transaction, AuthStatus, AuthCallback
+from models import Account, Balance, Transaction, AuthStatus, AuthCallback, PaginatedTransactions
 from requests.exceptions import HTTPError
 import secrets
 import os
 from starlette.middleware.sessions import SessionMiddleware
+import math
 
 app = FastAPI()
 
@@ -32,15 +33,16 @@ def get_accounts() -> list[Account]:
         accounts = accounts_repo.get_accounts()
         return accounts
     except HTTPError as error:
-            if error.response is not None:
-                match error.response.status_code:
-                    
-                    case 404:
-                        raise HTTPException(404, detail="Accounts not found")
-                    
-                raise HTTPException(error.response.status_code)
-            
-            raise HTTPException(502)
+        print(error.response)
+        if error.response is not None:
+            match error.response.status_code:
+                
+                case 404:
+                    raise HTTPException(404, detail="Accounts not found")
+                
+            raise HTTPException(error.response.status_code)
+        
+        raise HTTPException(502)
 
 @app.get(
     "/balance/{account_id}",
@@ -59,6 +61,7 @@ def get_balance(account_id: str) -> Balance:
         return balance
     
     except HTTPError as error:
+        print(error.response)
         if error.response is not None:
             match error.response.status_code:
                 
@@ -73,9 +76,15 @@ def get_balance(account_id: str) -> Balance:
 
 @app.get(
     "/transactions/{account_id}",
-    response_model=list[Transaction]
+    response_model=PaginatedTransactions
 )
-def get_transactions(account_id: str) -> list[Transaction]:
+def get_transactions(account_id: str, page: int | None = None, page_size: int | None = None) -> PaginatedTransactions:
+    if not page: page = 1
+    if not page_size: page_size = 20
+    if page_size > 100: page_size = 100
+
+    skip = (page - 1) * page_size
+    
     if len(account_id) > 128:
         raise HTTPException(400, detail="ID exceeds maximum length")
 
@@ -84,8 +93,11 @@ def get_transactions(account_id: str) -> list[Transaction]:
     transaction_repo = TransactionRepository(client)
     
     try:
-        transactions = transaction_repo.get_transactions(account_id)
-        return transactions
+        transactions = transaction_repo.get_transactions(account_id, skip, page_size)
+        
+        pg_count = math.ceil(transaction_repo.get_transaction_count(account_id) / page_size)
+        
+        return PaginatedTransactions(transactions, page, page_size, pg_count)
     
     except HTTPError as error:
         if error.response is not None:

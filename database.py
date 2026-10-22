@@ -286,15 +286,19 @@ class TransactionDb:
             self.conn.rollback()
             raise
         
-    def get_transactions(self, account_id: str) -> list[Transaction]:
+    def get_transactions(self, account_id: str, skip: int | None = None, limit: int | None = None) -> list[Transaction]:
         query = """
         SELECT * FROM transactions
         WHERE account_id = %s
-        ORDER BY transaction_timestamp DESC;
+        ORDER BY transaction_timestamp DESC
+        LIMIT %s OFFSET %s;
         """
-
+        
+        if not limit: limit = 5
+        if not skip: skip = 0
+                
         try:
-            self.cursor.execute(query, (account_id,))
+            self.cursor.execute(query, (account_id, limit, skip))
             records = self.cursor.fetchall()
             
             transactions: list[Transaction] = []
@@ -332,6 +336,24 @@ class TransactionDb:
             self.cursor.execute(query, (account_id,))
             self.conn.commit()
             
+        except:
+            self.conn.rollback()
+            raise
+    
+    def get_transaction_count(self, account_id: str) -> int:
+        query = """
+        SELECT COUNT(*) FROM transactions
+        WHERE account_id = %s
+        """
+        
+        try:
+            self.cursor.execute(query, (account_id,))
+            result = self.cursor.fetchone()
+            
+            if result is not None:
+                return result[0]
+            else:
+                return 0
         except:
             self.conn.rollback()
             raise

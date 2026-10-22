@@ -57,6 +57,13 @@ class Transaction:
     running_balance: RunningBalance
     pending: bool
     merchant_name: str | None = None
+
+@dataclass 
+class PaginatedTransactions:
+    transactions: list[Transaction]
+    page: int
+    page_size: int
+    page_count: int
     
 @dataclass
 class Account:
