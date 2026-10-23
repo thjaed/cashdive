@@ -1,55 +1,127 @@
+"use client";
+
 import Link from "next/link";
-import { AuthStatus, Account, AccountSummary, Balance } from "./types/models";
+import { AuthStatus, AccountSummary } from "./types/models";
 import { formatCurrency } from "@/extras/utils";
+import { useState, useEffect } from "react";
 
-export default async function Home() {
-  // bank connection status
-  const response = await fetch("http://localhost:8000/auth/status", {
-    cache: "no-store",
-  });
-  const authStatus = (await response.json()) as AuthStatus;
-  const connected = authStatus.connected;
+export default function Home() {
+  const [accounts, setAccounts] = useState<AccountSummary[] | null>(null);
+  const [connectionState, setConnectionState] = useState<boolean | null>(null);
 
-  let accounts: AccountSummary[] = [];
-  if (connected) {
-    const response = await fetch("http://localhost:8000/account_summary", {
+  async function getConnectionStatus() {
+    const response = await fetch("http://localhost:8000/auth/status", {
       cache: "no-store",
     });
-    accounts = (await response.json()) as AccountSummary[];
+    if (response.status == 200) {
+      const authStatus = (await response.json()) as AuthStatus;
+      setConnectionState(authStatus.connected);
+    }
   }
 
-  return (
-    <main className="min-h-screen bg-gray-900 px-4 py-12 text-slate-100">
-      {!connected ? (
-        //not connected to bank
-        <>
-          <h1>Not connected to your bank.</h1>
-          <Link href="http://localhost:8000/auth/start">Connect Here</Link>
-        </>
-      ) : (
-        // connected to bank
-        <>
-          <div className="mx-auto w-full max-w-2xl">
-            <h1 className="mb-6 text-2xl font-bold tracking-tight">Your Accounts</h1>
+  async function getAccounts() {
+    if (connectionState) {
+      const response = await fetch("http://localhost:8000/account_summary", {
+        cache: "no-store",
+      });
+      if (response.status == 200) {
+        const accountResponse = (await response.json()) as AccountSummary[];
+        setAccounts(accountResponse);
+      }
+    }
+  }
 
-            <ul className="divide-y divide-black overflow-hidden border border-black bg-slate-800">
-              {accounts.map((account: AccountSummary) => (
-                <li key={account.account_id}>
-                  <Link href={`/accounts/${account.account_id}`} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500">
-                    <div>
-                      <div className="font-semibold text-gray-100">{account.display_name}</div>
-                      <div className="mt-1 text-sm text-gray-400">{account.account_type}</div>
-                    </div>
-                      <div className="ml-auto shrink-0 text-sm font-medium text-gray-300">
-                        {account.balance.available ? formatCurrency(account.balance.currency, account.balance.available, "", "-") : ""}
-                        </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+  useEffect(() => {
+    getConnectionStatus();
+  }, []);
+
+  useEffect(() => {
+    getAccounts();
+  }, [connectionState]);
+
+  return (
+    <>
+      {connectionState === null ? (
+        // Connection state not determined
+        <div className="flex justify-center items-center min-h-screen bg-gray-900">
+          <div className="flex h-8 w-8 animate-spin rounded-full border-4 border-gray-600 border-t-slate-400" />
+        </div>
+      ) : !connectionState ? (
+        // Not connected
+          <div className="flex flex-col gap-4 justify-center items-center min-h-screen bg-gray-900">
+            <h1 className="text-bold text-2xl">
+              CashDive is not connected to your bank.
+            </h1>
+            <Link
+              className="group inline-flex items-center text-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 text-slate-300 hover:text-white focus-visible:outline-gray-300 underline-offset-2"
+              href="http://localhost:8000/auth/start"
+            >
+              <span className="hover:underline underline-offset-4 decoration-slate-300">
+                Connect
+              </span>
+
+              <span
+                aria-hidden="true"
+                className="material-symbols-outlined transition-transform motion-safe:group-hover:-translate-y-0.5 motion-safe:group-hover:translate-x-0.5"
+              >
+                arrow_outward
+              </span>
+            </Link>
           </div>
-        </>
+      ) : (
+        <main className="min-h-screen bg-gray-900 px-4 py-12 text-slate-100">
+          <div className="mx-auto w-full max-w-2xl">
+            <h1 className="mb-6 text-2xl font-bold tracking-tight">
+              Your Accounts
+            </h1>
+            {!accounts ? (
+              // Skeleton account loader
+              <ul className="divide-y divide-black overflow-hidden border border-black bg-slate-800">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <li key={index}>
+                    <div
+                      className="flex items-center gap-4 px-5 py-4"
+                    >
+                      <div>
+                        <div className="h-5 w-48 animate-pulse rounded bg-gray-700" />
+                        <div className="h-3 w-20 mt-3 animate-pulse rounded bg-gray-700" />
+
+                      </div>
+                      <div className="ml-auto h-3 w-10 mt-3 animate-pulse rounded bg-gray-700" />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="divide-y divide-black overflow-hidden border border-black bg-slate-800">
+                {accounts.map((account: AccountSummary) => (
+                  <li key={account.account_id}>
+                    <Link
+                      href={`/accounts/${account.account_id}`}
+                      className="flex items-center gap-4 px-5 py-4 hover:bg-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500"
+                    >
+                      <div>
+                        <div className="font-semibold text-gray-100">
+                          {account.display_name}
+                        </div>
+                        <div className="mt-1 text-sm text-gray-400">
+                          {account.account_type}
+                        </div>
+                      </div>
+                      <div className="ml-auto shrink-0 text-sm font-medium text-gray-300">
+                        {account.balance.available ? formatCurrency(
+                          account.balance.currency,
+                          account.balance.available,
+                          "", "-"): ""}
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </main>
       )}
-    </main>
+    </>
   );
 }
