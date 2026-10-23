@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api import TrueLayerClient
 from auth import TrueLayerAuth
 from repositories import AccountRepository, TransactionRepository, BalanceRepository
-from models import Account, Balance, Transaction, AuthStatus, AuthCallback, PaginatedTransactions
+from models import Account, Balance, Transaction, AuthStatus, AuthCallback, PaginatedTransactions, AccountSummary
 from requests.exceptions import HTTPError
 import secrets
 import os
@@ -45,7 +45,6 @@ def get_accounts() -> list[Account]:
         accounts = accounts_repo.get_accounts()
         return accounts
     except HTTPError as error:
-        print(error.response)
         if error.response is not None:
             match error.response.status_code:
                 
@@ -56,6 +55,42 @@ def get_accounts() -> list[Account]:
         
         raise HTTPException(502)
 
+@app.get(
+    "/account_summary",
+    response_model=list[AccountSummary]
+)
+def get_account_summary() -> list[AccountSummary]:
+    auth = TrueLayerAuth()
+    client = TrueLayerClient(auth)
+    
+    accounts_repo = AccountRepository(client)
+    balance_repo = BalanceRepository(client)
+    
+    try:
+        account_summary: list[AccountSummary] = []
+        accounts = accounts_repo.get_accounts()
+        
+        for a in accounts:
+            account_summary.append(AccountSummary(
+                a.account_id,
+                a.account_type,
+                a.display_name,
+                balance_repo.get_balance(a.account_id),
+                a.update_timestamp
+            ))
+            
+        return account_summary
+    except HTTPError as error:
+        if error.response is not None:
+            match error.response.status_code:
+                
+                case 404:
+                    raise HTTPException(404, detail="Accounts not found")
+                
+            raise HTTPException(error.response.status_code)
+        
+        raise HTTPException(502)
+    
 @app.get(
     "/balance/{account_id}",
     response_model=Balance
@@ -73,7 +108,6 @@ def get_balance(account_id: str) -> Balance:
         return balance
     
     except HTTPError as error:
-        print(error.response)
         if error.response is not None:
             match error.response.status_code:
                 

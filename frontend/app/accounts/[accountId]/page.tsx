@@ -1,6 +1,7 @@
 "use client";
 
 import { Balance, Transaction, Account } from "@/app/types/models";
+import { formatCurrency } from "@/extras/utils";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -36,6 +37,14 @@ export default function AccountPage() {
 
     if (pageCount && page >= 1 && page <= pageCount) {
       setCurrentPage(page);
+    }
+  }
+
+  function incrementPage(increment: number) {
+    if (pageCount &&
+      ((currentPage + increment) <= pageCount) &&
+      ((currentPage + increment) > 1)) {
+      setCurrentPage(currentPage + increment)
     }
   }
 
@@ -106,9 +115,8 @@ export default function AccountPage() {
           <h1 className="text-2xl font-bold">{account?.display_name}</h1>
 
           <div className="flex gap-3">
-            <h1>Account Balance</h1>
             <h1>
-              {balance?.available} {balance?.currency}
+              Account Balance: {(balance?.currency && balance?.available) ? formatCurrency(balance.currency, balance.available, "", "-") : "--.--"}
             </h1>
           </div>
         </div>
@@ -121,10 +129,7 @@ export default function AccountPage() {
                 <div>{transaction.timestamp}</div>
                 <div className="ml-auto flex gap-3">
                   <div className="text-sm font-medium text-gray-300">
-                    {transaction.amount}
-                  </div>
-                  <div className="text-sm font-medium text-gray-300">
-                    {transaction.currency}
+                    {formatCurrency(transaction.currency, transaction.amount, "+", "")}
                   </div>
                 </div>
               </div>
@@ -134,8 +139,7 @@ export default function AccountPage() {
         <div className="flex items-center pt-5 justify-between">
           <div className="flex gap-3 items-center">
             <button
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={pageCount === null || currentPage <= 1}
+              onClick={() => incrementPage(-1)}
               className="flex items-center hover:cursor-pointer hover:bg-gray-700 bg-slate-800 border-gray-700 shadow-sm border-2"
             >
               <span className="material-symbols-outlined">
@@ -161,8 +165,7 @@ export default function AccountPage() {
             <p>of {pageCount}</p>
 
             <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={pageCount === null || currentPage >= pageCount}
+              onClick={() => incrementPage(1)}
               className="flex items-center hover:cursor-pointer hover:bg-gray-700 bg-slate-800 border-gray-700 shadow-sm border-2"
             >
               <span className="material-symbols-outlined">chevron_forward</span>
