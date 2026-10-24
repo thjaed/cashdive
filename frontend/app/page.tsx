@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AuthStatus, AccountSummary } from "./types/models";
-import { formatCurrency } from "@/extras/utils";
+import { formatCurrency, deCapitalise } from "@/extras/utils";
 import { useState, useEffect } from "react";
 
 export default function Home() {
@@ -102,10 +102,10 @@ export default function Home() {
                     >
                       <div>
                         <div className="font-semibold text-gray-100">
-                          {account.display_name}
+                          {deCapitalise(account.display_name)}
                         </div>
                         <div className="mt-1 text-sm text-gray-400">
-                          {account.account_type}
+                          {deCapitalise(account.account_type)}
                         </div>
                       </div>
                       <div className="ml-auto shrink-0 text-sm font-medium text-gray-300">

@@ -1,7 +1,7 @@
 "use client";
 
 import { Balance, Transaction, Account } from "@/app/types/models";
-import { formatCurrency, skeletonWidth } from "@/extras/utils";
+import { formatCurrency, skeletonWidth, deCapitalise, formatTransactionDescription } from "@/extras/utils";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -173,7 +173,7 @@ export default function AccountPage() {
 
           <h1 className="text-2xl font-bold">
             {account?.display_name ? (
-              account.display_name
+              deCapitalise(account.display_name)
             ) : (
               <div className="h-8 w-70 animate-pulse rounded bg-gray-700" />
             )}
@@ -199,7 +199,7 @@ export default function AccountPage() {
             ? transactions.map((transaction: Transaction) => (
                 <li key={transaction.transaction_id}>
                   <div className="flex items-center gap-4 px-5 py-3">
-                    <div>{transaction.description}</div>
+                    <div>{formatTransactionDescription(transaction.description)}</div>
                     <div>{transaction.timestamp}</div>
                     <div className="ml-auto flex gap-3">
                       <div className="text-sm font-medium text-gray-300">
