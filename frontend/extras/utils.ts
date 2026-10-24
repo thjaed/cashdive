@@ -27,3 +27,10 @@ export function formatCurrency(currency: Currency, value: string | number, posPr
 
     return `${posNegPrefix}${prefix}${formattedValue}${suffix}`
 }
+
+export function skeletonWidth(index: number, min: number, max: number) {
+    if (max < min) {
+        throw new Error("max must be greater than or equal to min")
+    }
+  return min + ((index * 37) % (max - min + 1));
+}

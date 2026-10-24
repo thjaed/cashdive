@@ -1,7 +1,7 @@
 "use client";
 
 import { Balance, Transaction, Account } from "@/app/types/models";
-import { formatCurrency } from "@/extras/utils";
+import { formatCurrency, skeletonWidth } from "@/extras/utils";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,7 +11,7 @@ export default function AccountPage() {
   const accountId = params.accountId as string;
 
   const [balance, setBalance] = useState<Balance | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[] | []>([]);
+  const [transactions, setTransactions] = useState<Transaction[] | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
 
   const [pageCount, setPageCount] = useState<number | null>(null);
@@ -41,61 +41,120 @@ export default function AccountPage() {
   }
 
   function incrementPage(increment: number) {
-    if (pageCount &&
-      ((currentPage + increment) <= pageCount) &&
-      ((currentPage + increment) >= 1)) {
-      setCurrentPage(currentPage + increment)
-    }
-  }
-
-  async function getBalance() {
-    const balanceResponse = await fetch(
-      `http://localhost:8000/balance/${accountId}`,
-      {
-        cache: "no-store",
-      },
-    );
-    const balance = (await balanceResponse.json()) as Balance;
-    setBalance(balance);
-  }
-
-  async function getTransactions() {
-    const TransactionResponse = await fetch(
-      `http://localhost:8000/transactions/${accountId}?page=${currentPage}&page_size=${pageSize}`,
-      { cache: "no-store" },
-    );
-    const PagintatedTransactions = await TransactionResponse.json();
-    const transactions = PagintatedTransactions.transactions;
-    const page_count = PagintatedTransactions.page_count;
-
-    setTransactions(transactions);
-    setPageCount(page_count);
-  }
-
-  async function getAccount() {
-    const accountResponse = await fetch("http://localhost:8000/accounts", {
-      cache: "no-store",
-    });
-    const accounts = (await accountResponse.json()) as Account[];
-    const account = accounts.find(
-      (account: Account) => account.account_id == accountId,
-    );
-    if (account != null) {
-      setAccount(account);
+    if (
+      pageCount &&
+      currentPage + increment <= pageCount &&
+      currentPage + increment >= 1
+    ) {
+      setCurrentPage(currentPage + increment);
     }
   }
 
   useEffect(() => {
+    const controller = new AbortController();
+
+    async function getBalance() {
+      setBalance(null);
+
+      try {
+        const response = await fetch(
+          `http://localhost:8000/balance/${accountId}`,
+          {
+            cache: "no-store",
+            signal: controller.signal,
+          },
+        );
+
+        const data = await response.json();
+
+        setBalance(data);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        console.error(error);
+      }
+    }
     getBalance();
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+
+    async function getTransactions() {
+      setTransactions(null);
+
+      try {
+        const response = await fetch(
+          `http://localhost:8000/transactions/${accountId}?page=${currentPage}&page_size=${pageSize}`,
+          {
+            cache: "no-store",
+            signal: controller.signal,
+          },
+        );
+
+        const data = await response.json();
+
+        setTransactions(data.transactions);
+        setPageCount(data.page_count);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        console.error(error);
+      }
+    }
+
     getTransactions();
+
     setPageInput(String(currentPage));
-  }, [currentPage, pageSize]);
+
+    return () => {
+      controller.abort();
+    };
+  }, [accountId, currentPage, pageSize]);
 
   useEffect(() => {
+    const controller = new AbortController();
+
+    async function getAccount() {
+      setAccount(null);
+
+      try {
+        const response = await fetch("http://localhost:8000/accounts", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+
+        const data = await response.json();
+
+        const account = data.find(
+          (account: Account) => account.account_id == accountId,
+        );
+        if (account != null) {
+          setAccount(account);
+        }
+
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        console.error(error);
+      }
+    }
+
     getAccount();
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   return (
@@ -112,29 +171,63 @@ export default function AccountPage() {
             </Link>
           </span>
 
-          <h1 className="text-2xl font-bold">{account?.display_name}</h1>
+          <h1 className="text-2xl font-bold">
+            {account?.display_name ? (
+              account.display_name
+            ) : (
+              <div className="h-8 w-70 animate-pulse rounded bg-gray-700" />
+            )}
+          </h1>
 
           <div className="flex gap-3">
-            <h1>
-              Account Balance: {(balance?.currency && balance?.available) ? formatCurrency(balance.currency, balance.available, "", "-") : "--.--"}
-            </h1>
+            {balance?.currency && balance.available ? (
+              <p>
+                Account Balance:{" "}
+                {formatCurrency(balance.currency, balance.available, "", "-")}
+              </p>
+            ) : (
+              <span className="inline-flex gap-2 items-center">
+                <p>Account Balance: </p>
+                <div className="ml-auto h-4 w-14 animate-pulse rounded bg-gray-700" />
+              </span>
+            )}
           </div>
         </div>
 
         <ul className="divide-y divide-gray-700 overflow-hidden border border-black bg-slate-800 max-w-3xl shadow-sm">
-          {transactions.map((transaction: Transaction) => (
-            <li key={transaction.transaction_id}>
-              <div className="flex items-center gap-4 px-5 py-3">
-                <div>{transaction.description}</div>
-                <div>{transaction.timestamp}</div>
-                <div className="ml-auto flex gap-3">
-                  <div className="text-sm font-medium text-gray-300">
-                    {formatCurrency(transaction.currency, transaction.amount, "+", "")}
+          {transactions !== null
+            ? transactions.map((transaction: Transaction) => (
+                <li key={transaction.transaction_id}>
+                  <div className="flex items-center gap-4 px-5 py-3">
+                    <div>{transaction.description}</div>
+                    <div>{transaction.timestamp}</div>
+                    <div className="ml-auto flex gap-3">
+                      <div className="text-sm font-medium text-gray-300">
+                        {formatCurrency(
+                          transaction.currency,
+                          transaction.amount,
+                          "+",
+                          "",
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </li>
-          ))}
+                </li>
+              ))
+            : Array.from({ length: pageSize }).map((_, index) => (
+                <li key={index}>
+                  <div className="flex items-center gap-10 px-5 py-3">
+                    <div
+                      className="h-6 animate-pulse rounded bg-gray-700"
+                      style={{ width: `${skeletonWidth(index, 150, 210)}px` }}
+                    />
+                    <div className="h-6 w-26 animate-pulse rounded bg-gray-700" />
+                    <div className="ml-auto flex gap-3">
+                      <div className="ml-auto h-3 w-10 animate-pulse rounded bg-gray-700" />
+                    </div>
+                  </div>
+                </li>
+              ))}
         </ul>
         <div className="flex items-center pt-5 justify-between">
           <div className="flex gap-3 items-center">
