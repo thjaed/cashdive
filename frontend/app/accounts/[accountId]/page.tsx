@@ -1,7 +1,13 @@
 "use client";
 
 import { Balance, Transaction, Account } from "@/app/types/models";
-import { formatCurrency, skeletonWidth, deCapitalise, formatTransactionDescription } from "@/extras/utils";
+import {
+  formatCurrency,
+  skeletonWidth,
+  deCapitalise,
+  formatTransactionDescription,
+  formatTransactionDate,
+} from "@/extras/utils";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -195,35 +201,55 @@ export default function AccountPage() {
         </div>
 
         <ul className="divide-y divide-gray-700 overflow-hidden border border-black bg-slate-800 max-w-3xl shadow-sm">
+          <li className="hidden sm:block bg-slate-900 font-bold text-gray-400">
+            <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1fr)_150px_180px] md:grid-cols-[minmax(0,1fr)_170px_200px] px-5 py-1 w-full">
+              <p className="order-1 mr-5">
+                Description
+              </p>
+              <p className="order-3 sm:order-2">
+                Date
+              </p>
+              <div className="order-2 sm:order-3 ml-auto flex gap-3">
+                <p className="text-ml">
+                  Value
+                </p>
+              </div>
+            </div>
+          </li>
           {transactions !== null
             ? transactions.map((transaction: Transaction) => (
                 <li key={transaction.transaction_id}>
-                  <div className="flex items-center gap-4 px-5 py-3">
-                    <div>{formatTransactionDescription(transaction.description)}</div>
-                    <div>{transaction.timestamp}</div>
-                    <div className="ml-auto flex gap-3">
-                      <div className="text-sm font-medium text-gray-300">
+                  <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1fr)_150px_180px] md:grid-cols-[minmax(0,1fr)_170px_200px] px-5 py-3 w-full">
+                    <p className="order-1 font-bold mr-5">
+                      {formatTransactionDescription(transaction.description)}
+                    </p>
+                    <p className="order-3 sm:order-2 text-gray-300">
+                      {formatTransactionDate(transaction.timestamp)}
+                    </p>
+                    <div className="order-2 sm:order-3 ml-auto flex gap-3">
+                      <p className="text-ml font-medium text-gray-300">
                         {formatCurrency(
                           transaction.currency,
                           transaction.amount,
                           "+",
                           "",
                         )}
-                      </div>
+                      </p>
                     </div>
                   </div>
                 </li>
               ))
             : Array.from({ length: pageSize }).map((_, index) => (
+                // skeleton loader
                 <li key={index}>
-                  <div className="flex items-center gap-10 px-5 py-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1fr)_140px_200px] px-5 py-3 w-full">
                     <div
-                      className="h-6 animate-pulse rounded bg-gray-700"
+                      className="order-1 mr-5 h-6 animate-pulse rounded bg-gray-700"
                       style={{ width: `${skeletonWidth(index, 150, 210)}px` }}
                     />
-                    <div className="h-6 w-26 animate-pulse rounded bg-gray-700" />
-                    <div className="ml-auto flex gap-3">
-                      <div className="ml-auto h-3 w-10 animate-pulse rounded bg-gray-700" />
+                    <div className="order-3 sm:order-2 h-6 w-36 animate-pulse rounded bg-gray-700" />
+                    <div className="order-2 sm:order-3 ml-auto flex gap-3">
+                      <div className="h-6 w-16 animate-pulse rounded bg-gray-700" />
                     </div>
                   </div>
                 </li>

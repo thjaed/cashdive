@@ -57,10 +57,10 @@ export function formatTransactionDescription(text: string): string {
 
     for (let i = 0; i < text.length; i++) {
         const char: string = text[i];
-        
-        console.log(text.slice(i, i+4).toLowerCase())
 
-        if (text.slice(i, i+4).toLowerCase() === "www.") {
+        console.log(text.slice(i, i + 4).toLowerCase())
+
+        if (text.slice(i, i + 4).toLowerCase() === "www.") {
             // make 'www.' lowercase
             out.push(char.toLowerCase())
         } else if (i === 0 || text[i - 1] === " ") {
@@ -72,6 +72,33 @@ export function formatTransactionDescription(text: string): string {
     }
 
     return out.join("")
+}
 
+export function formatTransactionDate(date: string): string {
+    const parsedDate = new Date(date);
 
+    const weekday = parsedDate.toLocaleDateString("en-GB", {
+        weekday: "short",
+    });
+
+    const day = parsedDate.getDate();
+
+    const month = parsedDate.toLocaleDateString("en-GB", {
+        month: "short",
+    });
+
+    const year = parsedDate.getFullYear();
+
+    const suffix =
+        day >= 11 && day <= 13
+            ? "th"
+            : day % 10 === 1
+                ? "st"
+                : day % 10 === 2
+                    ? "nd"
+                    : day % 10 === 3
+                        ? "rd"
+                        : "th";
+
+    return `${weekday} ${day}${suffix} ${month} ${year}`;
 }
