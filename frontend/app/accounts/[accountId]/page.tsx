@@ -43,7 +43,7 @@ export default function AccountPage() {
   function incrementPage(increment: number) {
     if (pageCount &&
       ((currentPage + increment) <= pageCount) &&
-      ((currentPage + increment) > 1)) {
+      ((currentPage + increment) >= 1)) {
       setCurrentPage(currentPage + increment)
     }
   }
