@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AuthStatus, AccountSummary } from "./types/models";
-import { formatCurrency, deCapitalise } from "@/extras/utils";
+import { formatCurrency, deCapitalise } from "@/app/utils";
 import { useState, useEffect } from "react";
 
 export default function Home() {
@@ -71,7 +71,7 @@ export default function Home() {
       ) : (
         <main className="min-h-screen bg-gray-900 px-4 py-12 text-slate-100">
           <div className="mx-auto w-full max-w-2xl">
-            <h1 className="mb-6 text-2xl font-bold tracking-tight">
+            <h1 className="mb-6 text-3xl font-semibold">
               Your Accounts
             </h1>
             {!accounts ? (
@@ -98,22 +98,23 @@ export default function Home() {
                   <li key={account.account_id}>
                     <Link
                       href={`/accounts/${account.account_id}`}
-                      className="flex items-center gap-4 px-5 py-4 hover:bg-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500"
+                      className="flex items-center gap-6 px-5 py-4 hover:bg-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500"
                     >
                       <div>
-                        <div className="font-semibold text-gray-100">
+                        <p className="font-semibold text-lg text-gray-100">
                           {deCapitalise(account.display_name)}
-                        </div>
-                        <div className="mt-1 text-sm text-gray-400">
+                        </p>
+                        <p className="text-sm text-gray-400">
                           {deCapitalise(account.account_type)}
-                        </div>
+                        </p>
                       </div>
-                      <div className="ml-auto shrink-0 text-sm font-medium text-gray-300">
+                      <p className="ml-auto shrink-0 font-mono text-xl font-medium text-gray-300">
                         {account.balance.available ? formatCurrency(
                           account.balance.currency,
                           account.balance.available,
                           "", "-"): ""}
-                      </div>
+                      </p>
+                      <span className="material-symbols-outlined text-gray-500">chevron_forward</span>
                     </Link>
                   </li>
                 ))}

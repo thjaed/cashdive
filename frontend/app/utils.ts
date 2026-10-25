@@ -77,10 +77,6 @@ export function formatTransactionDescription(text: string): string {
 export function formatTransactionDate(date: string): string {
     const parsedDate = new Date(date);
 
-    const weekday = parsedDate.toLocaleDateString("en-GB", {
-        weekday: "short",
-    });
-
     const day = parsedDate.getDate();
 
     const month = parsedDate.toLocaleDateString("en-GB", {
@@ -89,16 +85,5 @@ export function formatTransactionDate(date: string): string {
 
     const year = parsedDate.getFullYear();
 
-    const suffix =
-        day >= 11 && day <= 13
-            ? "th"
-            : day % 10 === 1
-                ? "st"
-                : day % 10 === 2
-                    ? "nd"
-                    : day % 10 === 3
-                        ? "rd"
-                        : "th";
-
-    return `${weekday} ${day}${suffix} ${month} ${year}`;
+    return `${day} ${month}, ${year}`;
 }

@@ -7,7 +7,7 @@ import {
   deCapitalise,
   formatTransactionDescription,
   formatTransactionDate,
-} from "@/extras/utils";
+} from "@/app/utils";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -146,7 +146,6 @@ export default function AccountPage() {
         if (account != null) {
           setAccount(account);
         }
-
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
@@ -166,75 +165,96 @@ export default function AccountPage() {
   return (
     <main className="min-h-screen bg-gray-900 px-4 py-12 text-slate-100">
       <div className="mx-auto max-w-3xl">
-        <div className="flex flex-col gap-3 pb-3">
-          <span className="flex w-fit">
+        <div className="flex flex-col pb-3">
+          <span className="flex w-fit pb-5">
             <span className="material-symbols-outlined">chevron_backward</span>
             <Link
               href="/"
-              className="hover:text-gray-400 underline-offset-2 hover:underline pb-3"
+              className="hover:text-gray-400 underline-offset-2 hover:underline"
             >
               Back to Accounts
             </Link>
           </span>
 
-          <h1 className="text-2xl font-bold">
-            {account?.display_name ? (
-              deCapitalise(account.display_name)
-            ) : (
-              <div className="h-8 w-70 animate-pulse rounded bg-gray-700" />
-            )}
-          </h1>
+          {account?.display_name ? (
+            <h1 className="text-3xl font-semibold pb-4">
+              {deCapitalise(account.display_name)}
+            </h1>
+          ) : (
+            // skeleton title
+            <div className="h-9 w-80 mb-4 animate-pulse rounded bg-gray-700" />
+          )}
 
           <div className="flex gap-3">
             {balance?.currency && balance.available ? (
-              <p>
-                Account Balance:{" "}
-                {formatCurrency(balance.currency, balance.available, "", "-")}
-              </p>
+              <div className="bg-slate-800 border-gray-700 border-2 w-full flex flex-col items-center justify-center gap-1 py-3">
+                <h2 className="font-semibold text-lg">Account Balance</h2>
+                <h3 className="text-4xl font-mono font-bold">
+                  {formatCurrency(balance.currency, balance.available, "", "-")}
+                </h3>
+              </div>
             ) : (
-              <span className="inline-flex gap-2 items-center">
-                <p>Account Balance: </p>
-                <div className="ml-auto h-4 w-14 animate-pulse rounded bg-gray-700" />
-              </span>
+              // skeleton
+              <div className="bg-slate-800 border-gray-700 border-2 w-full flex flex-col items-center justify-center gap-1 py-3">
+                <h2 className="font-semibold text-lg">Account Balance</h2>
+                <div className="h-10 w-50 animate-pulse rounded bg-gray-700" />
+              </div>
             )}
           </div>
         </div>
 
-        <ul className="divide-y divide-gray-700 overflow-hidden border border-black bg-slate-800 max-w-3xl shadow-sm">
+        <ul className="divide-y divide-gray-700 overflow-hidden border-2 border-gray-700 bg-slate-800 max-w-3xl shadow-sm">
           <li className="hidden sm:block bg-slate-900 font-bold text-gray-400">
-            <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1fr)_150px_180px] md:grid-cols-[minmax(0,1fr)_170px_200px] px-5 py-1 w-full">
-              <p className="order-1 mr-5">
-                Description
-              </p>
-              <p className="order-3 sm:order-2">
-                Date
-              </p>
+            <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1.3fr)_170px_minmax(0,0.5fr)] px-5 py-1 w-full">
+              <p className="order-1 mr-5">Description</p>
+              <p className="order-3 sm:order-2">Date</p>
               <div className="order-2 sm:order-3 ml-auto flex gap-3">
-                <p className="text-ml">
-                  Value
-                </p>
+                <p className="text-ml">Amount</p>
               </div>
             </div>
           </li>
-          {transactions !== null
+          { transactions !== null
             ? transactions.map((transaction: Transaction) => (
                 <li key={transaction.transaction_id}>
-                  <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1fr)_150px_180px] md:grid-cols-[minmax(0,1fr)_170px_200px] px-5 py-3 w-full">
-                    <p className="order-1 font-bold mr-5">
-                      {formatTransactionDescription(transaction.description)}
-                    </p>
-                    <p className="order-3 sm:order-2 text-gray-300">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-5 py-3 sm:grid-cols-[minmax(0,1.3fr)_170px_minmax(0,0.5fr)] sm:gap-0">
+                    <div className="order-1 flex flex-col sm:flex-row min-w-0 sm:items-center justify-between sm:justify-start sm:gap-3">
+                      <p className="font-bold truncate">
+                        {formatTransactionDescription(transaction.description)}
+                      </p>
+                      {transaction.pending && (
+                        <div className="hidden sm:block rounded-sm border border-gray-300 px-2 text-sm">
+                          Pending
+                        </div>
+                      )}
+                      <p className="sm:hidden text-gray-300">
+                      {formatTransactionDate(transaction.timestamp)}
+                      </p>
+                    </div>
+                    
+                    <p className="hidden sm:block text-gray-300 sm:order-2">
                       {formatTransactionDate(transaction.timestamp)}
                     </p>
-                    <div className="order-2 sm:order-3 ml-auto flex gap-3">
-                      <p className="text-ml font-medium text-gray-300">
-                        {formatCurrency(
-                          transaction.currency,
-                          transaction.amount,
-                          "+",
-                          "",
-                        )}
-                      </p>
+
+                    <div className="order-2 ml-auto flex flex-col items-end gap-2 sm:order-3 sm:flex-row">
+                      <div
+                        className={`rounded-sm w-fit px-1 ${Number(transaction.amount) > 0 ? "bg-green-800/50" : ""}`}
+                      >
+                        <p className="text-ml font-mono font-bold">
+                          {formatCurrency(
+                            transaction.currency,
+                            transaction.amount,
+                            "+",
+                            "",
+                          )}
+                        </p>
+                      </div>
+                      {transaction.pending ? (
+                        <div className="sm:hidden rounded-sm border border-gray-300 px-2 text-sm">
+                          Pending
+                        </div>
+                      ) : (
+                        ""
+                      )}
                     </div>
                   </div>
                 </li>
@@ -242,12 +262,12 @@ export default function AccountPage() {
             : Array.from({ length: pageSize }).map((_, index) => (
                 // skeleton loader
                 <li key={index}>
-                  <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1fr)_140px_200px] px-5 py-3 w-full">
+                  <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1fr)_150px_180px] md:grid-cols-[minmax(0,1fr)_170px_200px] px-5 py-3 w-full">
                     <div
-                      className="order-1 mr-5 h-6 animate-pulse rounded bg-gray-700"
+                      className="order-1 mb-2 sm:mb-0 mr-5 h-5 sm:h-6 animate-pulse rounded bg-gray-700"
                       style={{ width: `${skeletonWidth(index, 150, 210)}px` }}
                     />
-                    <div className="order-3 sm:order-2 h-6 w-36 animate-pulse rounded bg-gray-700" />
+                    <div className="order-3 sm:order-2 h-5 sm:h-6 w-36 animate-pulse rounded bg-gray-700" />
                     <div className="order-2 sm:order-3 ml-auto flex gap-3">
                       <div className="h-6 w-16 animate-pulse rounded bg-gray-700" />
                     </div>
