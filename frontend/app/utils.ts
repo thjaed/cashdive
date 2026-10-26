@@ -87,3 +87,25 @@ export function formatTransactionDate(date: string): string {
 
     return `${day} ${month}, ${year}`;
 }
+
+export function formatLongTransactionDate(date: string): string {
+    const parsedDate = new Date(date);
+
+    const day = parsedDate.getDate();
+
+    const weekday = parsedDate.toLocaleDateString("en-GB", {
+        weekday: "long"
+    })
+
+    const month = parsedDate.toLocaleDateString("en-GB", {
+        month: "long",
+    });
+
+    const year = parsedDate.getFullYear();
+
+    return `${weekday} ${day} ${month}, ${year}`;
+}
+
+export function formatTransactionCategory(text: string): string {
+    return (deCapitalise(text.replace("_", " ")))
+}

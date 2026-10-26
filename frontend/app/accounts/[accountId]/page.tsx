@@ -1,5 +1,6 @@
 "use client";
 
+import TransactionPopup from "@/app/TransactionPopup";
 import { Balance, Transaction, Account } from "@/app/types/models";
 import {
   formatCurrency,
@@ -18,6 +19,7 @@ export default function AccountPage() {
 
   const [balance, setBalance] = useState<Balance | null>(null);
   const [transactions, setTransactions] = useState<Transaction[] | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
 
   const [pageCount, setPageCount] = useState<number | null>(null);
@@ -215,8 +217,8 @@ export default function AccountPage() {
           </li>
           { transactions !== null
             ? transactions.map((transaction: Transaction) => (
-                <li key={transaction.transaction_id}>
-                  <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-5 py-3 sm:grid-cols-[minmax(0,1.3fr)_170px_minmax(0,0.5fr)] sm:gap-0">
+                <li key={transaction.transaction_id} onClick={() => setSelectedTransaction(transaction)} className="hover:cursor-pointer hover:bg-gray-600">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-5 py-3 sm:grid-cols-[minmax(0,1.3fr)_170px_minmax(0,0.5fr)] sm:gap-0 hover:cursor-pointer hover:bg-slate-700">
                     <div className="order-1 flex flex-col sm:flex-row min-w-0 sm:items-center justify-between sm:justify-start sm:gap-3">
                       <p className="font-bold truncate">
                         {formatTransactionDescription(transaction.description)}
@@ -275,6 +277,15 @@ export default function AccountPage() {
                 </li>
               ))}
         </ul>
+        {selectedTransaction && (
+          <>
+          <TransactionPopup
+            transaction={selectedTransaction}
+            open={true}
+            onClose={() => setSelectedTransaction(null)} />
+        <div className="fixed inset-0 z-40 bg-black/60"></div>
+        </>
+        )}
         <div className="flex items-center pt-5 justify-between">
           <div className="flex gap-3 items-center">
             <button
