@@ -1,7 +1,7 @@
 import os
 import psycopg2
 from datetime import datetime, timezone
-from models import Balance, RunningBalance, Transaction, Account, TransactionNote
+from models import Balance, RunningBalance, Transaction, Account, TransactionNote, TransactionSummary
 
 
 def get_connection():
@@ -325,6 +325,54 @@ class TransactionDb:
             self.conn.rollback()
             raise
     
+    def get_summary(self, account_id: str, skip: int | None = None, limit: int | None = None) -> list[TransactionSummary]:
+        query = """
+        SELECT
+            t.transaction_id,
+            t.account_id,
+            t.transaction_timestamp,
+            t.description,
+            t.amount,
+            t.currency,
+            t.transaction_category,
+            t.pending,
+            tn.transaction_id IS NOT NULL AS has_note
+        FROM transactions t
+        LEFT JOIN transaction_notes tn
+            ON t.transaction_id = tn.transaction_id
+        WHERE t.account_id = %s
+        ORDER BY t.transaction_timestamp DESC
+        LIMIT %s OFFSET %s;
+        """
+        
+        if not limit: limit = 5
+        if not skip: skip = 0
+                
+        try:
+            self.cursor.execute(query, (account_id, limit, skip))
+            records = self.cursor.fetchall()
+            
+            transactions: list[TransactionSummary] = []
+            
+            for record in records:
+                transactions.append(TransactionSummary(
+                    transaction_id=record[0],
+                    account_id=record[1],
+                    timestamp=record[2],
+                    description=record[3],
+                    amount=record[4],
+                    currency=record[5],
+                    transaction_category=record[6],
+                    pending=record[7],
+                    has_note=record[8]
+                ))
+                
+            return transactions
+                
+        except:
+            self.conn.rollback()
+            raise
+        
     def delete_pending_transactions(self, account_id: str) -> None:
         query = """
         DELETE FROM transactions

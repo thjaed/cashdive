@@ -57,12 +57,32 @@ export interface Transaction {
   merchant_name: string | null
 }
 
+export interface TransactionSummary {
+    transaction_id: string
+    account_id: string
+    timestamp: string
+    description: string
+    amount: string
+    currency: Currency
+    transaction_category: TransactionCategory
+    pending: boolean
+    has_note: boolean 
+}
+
 export interface PaginatedTransactions {
   transactions: Transaction[]
   page: number
   page_size: number
   page_count: number
 }
+
+export interface PaginatedTransactionsSummary {
+  transactions: TransactionSummary[]
+  page: number
+  page_size: number
+  page_count: number
+}
+
 export interface Account {
   account_id: string
   account_type: AccountType;

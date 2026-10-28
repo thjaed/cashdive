@@ -1,7 +1,7 @@
 "use client";
 
 import TransactionPopup from "@/app/TransactionPopup";
-import { Balance, Transaction, Account } from "@/app/types/models";
+import { Balance, Transaction, Account, TransactionSummary } from "@/app/types/models";
 import {
   formatCurrency,
   skeletonWidth,
@@ -18,8 +18,9 @@ export default function AccountPage() {
   const accountId = params.accountId as string;
 
   const [balance, setBalance] = useState<Balance | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[] | null>(null);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [transactions, setTransactions] = useState<TransactionSummary[] | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<TransactionSummary | null>(null);
+  const [refreshTransactions, setRefreshTransactions] = useState<number>(0); // refresh trigger state for after closing popup
   const [account, setAccount] = useState<Account | null>(null);
 
   const [pageCount, setPageCount] = useState<number | null>(null);
@@ -56,6 +57,21 @@ export default function AccountPage() {
     ) {
       setCurrentPage(currentPage + increment);
     }
+  }
+
+  function triggerTransactionRefresh() {
+    if (refreshTransactions === 0) {
+      setRefreshTransactions(1)
+    } else {
+      setRefreshTransactions(0)
+    }
+  }
+  
+  function transactionPopupClosed(noteChanged: boolean) {
+    if (noteChanged) {
+      triggerTransactionRefresh()
+    }
+    setSelectedTransaction(null)
   }
 
   useEffect(() => {
@@ -99,7 +115,7 @@ export default function AccountPage() {
 
       try {
         const response = await fetch(
-          `http://localhost:8000/transactions/${accountId}?page=${currentPage}&page_size=${pageSize}`,
+          `http://localhost:8000/transactions/${accountId}/summary?page=${currentPage}&page_size=${pageSize}`,
           {
             cache: "no-store",
             signal: controller.signal,
@@ -126,7 +142,7 @@ export default function AccountPage() {
     return () => {
       controller.abort();
     };
-  }, [accountId, currentPage, pageSize]);
+  }, [accountId, currentPage, pageSize, refreshTransactions]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -216,18 +232,22 @@ export default function AccountPage() {
             </div>
           </li>
           { transactions !== null
-            ? transactions.map((transaction: Transaction) => (
+            ? transactions.map((transaction: TransactionSummary) => (
                 <li key={transaction.transaction_id} onClick={() => setSelectedTransaction(transaction)} className="hover:cursor-pointer hover:bg-gray-600">
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-5 py-3 sm:grid-cols-[minmax(0,1.3fr)_170px_minmax(0,0.5fr)] sm:gap-0 hover:cursor-pointer hover:bg-slate-700">
                     <div className="order-1 flex flex-col sm:flex-row min-w-0 sm:items-center justify-between sm:justify-start sm:gap-3">
                       <p className="font-bold truncate">
                         {formatTransactionDescription(transaction.description)}
                       </p>
+                       {transaction.has_note && (
+                        <span className="material-symbols-outlined text-sm font-normal">sticky_note_2</span>
+                      )}
                       {transaction.pending && (
                         <div className="hidden sm:block rounded-sm border border-gray-300 px-2 text-sm">
                           Pending
                         </div>
                       )}
+                     
                       <p className="sm:hidden text-gray-300">
                       {formatTransactionDate(transaction.timestamp)}
                       </p>
@@ -282,8 +302,8 @@ export default function AccountPage() {
           <TransactionPopup
             transaction={selectedTransaction}
             open={true}
-            onClose={() => setSelectedTransaction(null)} />
-        <div className="fixed inset-0 z-40 bg-black/60"></div>
+            onClose={(x) => transactionPopupClosed(x)} />
+          <div className="fixed inset-0 z-40 bg-black/60"></div>
         </>
         )}
         <div className="flex items-center pt-5 justify-between">

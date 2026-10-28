@@ -1,7 +1,7 @@
 "use client";
 
 import Popup from "reactjs-popup";
-import type { Transaction } from "./types/models";
+import type { Transaction, TransactionSummary } from "./types/models";
 import {
   formatCurrency,
   formatLongTransactionDate,
@@ -11,9 +11,9 @@ import {
 import { useEffect, useState } from "react";
 
 interface TransactionPopupProps {
-  transaction: Transaction;
+  transaction: TransactionSummary;
   open: boolean;
-  onClose: () => void;
+  onClose: (noteChanged: boolean) => void;
 }
 
 export default function TransactionPopup({
@@ -21,14 +21,14 @@ export default function TransactionPopup({
   open,
   onClose,
 }: TransactionPopupProps) {
-  const [noteInput, setNoteInput] = useState<string | undefined>(undefined);
+  const [noteInput, setNoteInput] = useState<string>("");
 
   useEffect(() => {
     // get note
     const controller = new AbortController();
 
     async function getNote() {
-      setNoteInput(undefined);
+      setNoteInput("");
 
       try {
         const response = await fetch(
@@ -58,7 +58,7 @@ export default function TransactionPopup({
   }, []);
 
   async function submitNote() {
-    if (noteInput && noteInput.length > 0 && noteInput.length <= 1000) {      
+    if (noteInput.length <= 1000) {      
       try {
         const response = await fetch(
           `http://localhost:8000/transactions/${transaction.transaction_id}/note`,
@@ -76,8 +76,8 @@ export default function TransactionPopup({
         if (!response.ok) {
             throw new Error(`Failed to update note (${response.status})`);
         }
-
-        onClose()
+        
+        onClose(true)
       } catch (error) {
         console.error("Failed to submit note:", error);
       }
@@ -85,12 +85,12 @@ export default function TransactionPopup({
   }
 
   return (
-    <Popup open={open} onClose={onClose} modal>
-      <div className="flex flex-col gap-1 shadow-2xl w-80 h-120 text-slate-100 bg-slate-900 border-2 border-slate-700">
+    <Popup open={open} onClose={() => onClose(false)} modal>
+      <div className="flex flex-col gap-1 shadow-2xl w-80 h-140 text-slate-100 bg-slate-900 border-2 border-slate-700">
         <div className="flex justify-end">
           <button
             className="flex items-center px-2 py-2 hover:cursor-pointer hover:bg-slate-700"
-            onClick={onClose}
+            onClick={() => onClose(false)}
           >
             <span className="material-symbols-outlined text-slate-300">
               close
@@ -120,7 +120,9 @@ export default function TransactionPopup({
             </li>
           </ul>
           <div className="w-full flex-1 flex flex-col min-h-0 pb-5">
-            <p className="font-bold mb-1">Notes</p>
+            <span className="flex items-center gap-1 pb-1"><span className="material-symbols-outlined text-sm font-normal">sticky_note_2</span>
+            <span className="font-bold mb-1">Notes</span></span>           
+
             <textarea
               className="border border-gray-700 w-full flex-1 p-1 text-sm resize-none focus:outline-none focus:border-slate-500"
               placeholder="Add notes for this transaction here"

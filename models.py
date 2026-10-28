@@ -58,9 +58,28 @@ class Transaction:
     pending: bool
     merchant_name: str | None = None
 
+@dataclass
+class TransactionSummary:
+    transaction_id: str
+    account_id: str
+    timestamp: datetime
+    description: str
+    amount: Decimal
+    currency: Currency
+    transaction_category: TransactionCategory
+    pending: bool
+    has_note: bool
+    
 @dataclass 
 class PaginatedTransactions:
     transactions: list[Transaction]
+    page: int
+    page_size: int
+    page_count: int
+    
+@dataclass 
+class PaginatedTransactionsSummary:
+    transactions: list[TransactionSummary]
     page: int
     page_size: int
     page_count: int

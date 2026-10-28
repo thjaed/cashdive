@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api import TrueLayerClient
 from auth import TrueLayerAuth
 from repositories import AccountRepository, TransactionRepository, BalanceRepository, TransactionNoteRepository
-from models import Account, Balance, Transaction, AuthStatus, AuthCallback, PaginatedTransactions, AccountSummary, TransactionNote, NoteRequestBody
+from models import Account, Balance, Transaction, AuthStatus, AuthCallback, PaginatedTransactions, AccountSummary, TransactionNote, NoteRequestBody, PaginatedTransactionsSummary
 from requests.exceptions import HTTPError
 import secrets
 import os
@@ -155,6 +155,43 @@ def get_transactions(account_id: str, page: int | None = None, page_size: int | 
             raise HTTPException(error.response.status_code)
         
         raise HTTPException(502)
+
+@app.get(
+    "/transactions/{account_id}/summary",
+    response_model=PaginatedTransactionsSummary
+)
+def get_transaction_summary(account_id: str, page: int | None = None, page_size: int | None = None) -> PaginatedTransactionsSummary:
+    if not page: page = 1
+    if not page_size: page_size = 20
+    if page_size > 100: page_size = 100
+
+    skip = (page - 1) * page_size
+    
+    if len(account_id) > 128:
+        raise HTTPException(400, detail="ID exceeds maximum length")
+
+    auth = TrueLayerAuth()
+    client = TrueLayerClient(auth)
+    transaction_repo = TransactionRepository(client)
+    
+    try:
+        transactions = transaction_repo.get_summary(account_id, skip, page_size)
+        
+        pg_count = math.ceil(transaction_repo.get_transaction_count(account_id) / page_size)
+        
+        return PaginatedTransactionsSummary(transactions, page, page_size, pg_count)
+    
+    except HTTPError as error:
+        if error.response is not None:
+            match error.response.status_code:
+                
+                case 404:
+                    raise HTTPException(404, detail="Account not found")
+                
+            raise HTTPException(error.response.status_code)
+        
+        raise HTTPException(502)
+
 
 @app.get(
     "/transactions/{transaction_id}/note",
