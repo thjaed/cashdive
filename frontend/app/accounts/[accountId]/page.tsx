@@ -1,7 +1,12 @@
 "use client";
 
 import TransactionPopup from "@/app/TransactionPopup";
-import { Balance, Transaction, Account, TransactionSummary } from "@/app/types/models";
+import {
+  Balance,
+  Transaction,
+  Account,
+  TransactionSummary,
+} from "@/app/types/models";
 import {
   formatCurrency,
   skeletonWidth,
@@ -18,8 +23,11 @@ export default function AccountPage() {
   const accountId = params.accountId as string;
 
   const [balance, setBalance] = useState<Balance | null>(null);
-  const [transactions, setTransactions] = useState<TransactionSummary[] | null>(null);
-  const [selectedTransaction, setSelectedTransaction] = useState<TransactionSummary | null>(null);
+  const [transactions, setTransactions] = useState<TransactionSummary[] | null>(
+    null,
+  );
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionSummary | null>(null);
   const [refreshTransactions, setRefreshTransactions] = useState<number>(0); // refresh trigger state for after closing popup
   const [account, setAccount] = useState<Account | null>(null);
 
@@ -61,17 +69,17 @@ export default function AccountPage() {
 
   function triggerTransactionRefresh() {
     if (refreshTransactions === 0) {
-      setRefreshTransactions(1)
+      setRefreshTransactions(1);
     } else {
-      setRefreshTransactions(0)
+      setRefreshTransactions(0);
     }
   }
-  
+
   function transactionPopupClosed(noteChanged: boolean) {
     if (noteChanged) {
-      triggerTransactionRefresh()
+      triggerTransactionRefresh();
     }
-    setSelectedTransaction(null)
+    setSelectedTransaction(null);
   }
 
   useEffect(() => {
@@ -111,8 +119,6 @@ export default function AccountPage() {
     const controller = new AbortController();
 
     async function getTransactions() {
-      setTransactions(null);
-
       try {
         const response = await fetch(
           `http://localhost:8000/transactions/${accountId}/summary?page=${currentPage}&page_size=${pageSize}`,
@@ -180,11 +186,19 @@ export default function AccountPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (account?.display_name) {
+      document.title = `CashDive - ${deCapitalise(account.display_name)}`;
+    } else {
+      document.title = "CashDive";
+    }
+  }, [account]);
+
   return (
     <main className="min-h-screen bg-gray-900 px-4 py-12 text-slate-100">
       <div className="mx-auto max-w-3xl">
         <div className="flex flex-col pb-3">
-          <span className="flex w-fit pb-5">
+          <span className="flex w-fit pb-8">
             <span className="material-symbols-outlined">chevron_backward</span>
             <Link
               href="/"
@@ -195,7 +209,7 @@ export default function AccountPage() {
           </span>
 
           {account?.display_name ? (
-            <h1 className="text-3xl font-semibold pb-4">
+            <h1 className="text-3xl font-bold pb-8 uppercase font-mono">
               {deCapitalise(account.display_name)}
             </h1>
           ) : (
@@ -231,28 +245,34 @@ export default function AccountPage() {
               </div>
             </div>
           </li>
-          { transactions !== null
+          {transactions !== null
             ? transactions.map((transaction: TransactionSummary) => (
-                <li key={transaction.transaction_id} onClick={() => setSelectedTransaction(transaction)} className="hover:cursor-pointer hover:bg-gray-600">
+                <li
+                  key={transaction.transaction_id}
+                  onClick={() => setSelectedTransaction(transaction)}
+                  className="hover:cursor-pointer hover:bg-gray-600"
+                >
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-5 py-3 sm:grid-cols-[minmax(0,1.3fr)_170px_minmax(0,0.5fr)] sm:gap-0 hover:cursor-pointer hover:bg-slate-700">
                     <div className="order-1 flex flex-col sm:flex-row min-w-0 sm:items-center justify-between sm:justify-start sm:gap-3">
-                      <p className="font-bold truncate">
+                      <span className="font-bold truncate flex items-center gap-1">
                         {formatTransactionDescription(transaction.description)}
-                      </p>
-                       {transaction.has_note && (
-                        <span className="material-symbols-outlined text-sm font-normal">sticky_note_2</span>
-                      )}
+                        {transaction.has_note && (
+                          <span className="material-symbols-outlined text-sm font-normal">
+                            sticky_note_2
+                          </span>
+                        )}
+                      </span>
                       {transaction.pending && (
                         <div className="hidden sm:block rounded-sm border border-gray-300 px-2 text-sm">
                           Pending
                         </div>
                       )}
-                     
+
                       <p className="sm:hidden text-gray-300">
-                      {formatTransactionDate(transaction.timestamp)}
+                        {formatTransactionDate(transaction.timestamp)}
                       </p>
                     </div>
-                    
+
                     <p className="hidden sm:block text-gray-300 sm:order-2">
                       {formatTransactionDate(transaction.timestamp)}
                     </p>
@@ -299,12 +319,13 @@ export default function AccountPage() {
         </ul>
         {selectedTransaction && (
           <>
-          <TransactionPopup
-            transaction={selectedTransaction}
-            open={true}
-            onClose={(x) => transactionPopupClosed(x)} />
-          <div className="fixed inset-0 z-40 bg-black/60"></div>
-        </>
+            <TransactionPopup
+              transaction={selectedTransaction}
+              open={true}
+              onClose={(x) => transactionPopupClosed(x)}
+            />
+            <div className="fixed inset-0 z-40 bg-black/60"></div>
+          </>
         )}
         <div className="flex items-center pt-5 justify-between">
           <div className="flex gap-3 items-center">

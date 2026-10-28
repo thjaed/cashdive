@@ -32,6 +32,7 @@ export default function Home() {
   }
 
   useEffect(() => {
+    document.title = "CashDive";
     getConnectionStatus();
   }, []);
 
@@ -48,30 +49,30 @@ export default function Home() {
         </div>
       ) : !connectionState ? (
         // Not connected
-          <div className="flex flex-col gap-4 justify-center items-center min-h-screen bg-gray-900">
-            <h1 className="text-bold text-2xl">
-              CashDive is not connected to your bank.
-            </h1>
-            <Link
-              className="group inline-flex items-center text-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 text-slate-300 hover:text-white focus-visible:outline-gray-300 underline-offset-2"
-              href="http://localhost:8000/auth/start"
-            >
-              <span className="hover:underline underline-offset-4 decoration-slate-300">
-                Connect
-              </span>
+        <div className="flex flex-col gap-4 justify-center items-center min-h-screen bg-gray-900">
+          <h1 className="text-bold text-2xl">
+            CashDive is not connected to your bank.
+          </h1>
+          <Link
+            className="group inline-flex items-center text-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 text-slate-300 hover:text-white focus-visible:outline-gray-300 underline-offset-2"
+            href="http://localhost:8000/auth/start"
+          >
+            <span className="hover:underline underline-offset-4 decoration-slate-300">
+              Connect
+            </span>
 
-              <span
-                aria-hidden="true"
-                className="material-symbols-outlined transition-transform motion-safe:group-hover:-translate-y-0.5 motion-safe:group-hover:translate-x-0.5"
-              >
-                arrow_outward
-              </span>
-            </Link>
-          </div>
+            <span
+              aria-hidden="true"
+              className="material-symbols-outlined transition-transform motion-safe:group-hover:-translate-y-0.5 motion-safe:group-hover:translate-x-0.5"
+            >
+              arrow_outward
+            </span>
+          </Link>
+        </div>
       ) : (
         <main className="min-h-screen bg-gray-900 px-4 py-12 text-slate-100">
           <div className="mx-auto w-full max-w-2xl">
-            <h1 className="mb-6 text-3xl font-semibold">
+            <h1 className="mb-6 text-3xl font-bold uppercase font-mono">
               Your Accounts
             </h1>
             {!accounts ? (
@@ -79,13 +80,10 @@ export default function Home() {
               <ul className="divide-y divide-black overflow-hidden border border-black bg-slate-800">
                 {Array.from({ length: 3 }).map((_, index) => (
                   <li key={index}>
-                    <div
-                      className="flex items-center gap-4 px-5 py-4"
-                    >
+                    <div className="flex items-center gap-4 px-5 py-4">
                       <div>
                         <div className="h-5 w-48 animate-pulse rounded bg-gray-700" />
                         <div className="h-3 w-20 mt-3 animate-pulse rounded bg-gray-700" />
-
                       </div>
                       <div className="ml-auto h-3 w-10 mt-3 animate-pulse rounded bg-gray-700" />
                     </div>
@@ -109,12 +107,18 @@ export default function Home() {
                         </p>
                       </div>
                       <p className="ml-auto shrink-0 font-mono text-xl font-medium text-gray-300">
-                        {account.balance.available ? formatCurrency(
-                          account.balance.currency,
-                          account.balance.available,
-                          "", "-"): ""}
+                        {account.balance.available
+                          ? formatCurrency(
+                              account.balance.currency,
+                              account.balance.available,
+                              "",
+                              "-",
+                            )
+                          : ""}
                       </p>
-                      <span className="material-symbols-outlined text-gray-500">chevron_forward</span>
+                      <span className="material-symbols-outlined text-gray-500">
+                        chevron_forward
+                      </span>
                     </Link>
                   </li>
                 ))}
