@@ -57,9 +57,7 @@ export function formatTransactionDescription(text: string): string {
 
     for (let i = 0; i < text.length; i++) {
         const char: string = text[i];
-
-        console.log(text.slice(i, i + 4).toLowerCase())
-
+        
         if (text.slice(i, i + 4).toLowerCase() === "www.") {
             // make 'www.' lowercase
             out.push(char.toLowerCase())

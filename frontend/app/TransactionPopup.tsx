@@ -1,3 +1,5 @@
+"use client";
+
 import Popup from "reactjs-popup";
 import type { Transaction } from "./types/models";
 import {
@@ -6,6 +8,7 @@ import {
   formatTransactionDescription,
   formatTransactionCategory,
 } from "./utils";
+import { useEffect, useState } from "react";
 
 interface TransactionPopupProps {
   transaction: Transaction;
@@ -18,6 +21,69 @@ export default function TransactionPopup({
   open,
   onClose,
 }: TransactionPopupProps) {
+  const [noteInput, setNoteInput] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    // get note
+    const controller = new AbortController();
+
+    async function getNote() {
+      setNoteInput(undefined);
+
+      try {
+        const response = await fetch(
+          `http://localhost:8000/transactions/${transaction.transaction_id}/note`,
+          {
+            cache: "no-store",
+            signal: controller.signal,
+          },
+        );
+
+        const data = await response.json();
+        setNoteInput(data.note);
+
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        console.error(error);
+      }
+    }
+    getNote();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  async function submitNote() {
+    if (noteInput && noteInput.length > 0 && noteInput.length <= 1000) {      
+      try {
+        const response = await fetch(
+          `http://localhost:8000/transactions/${transaction.transaction_id}/note`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+            note: noteInput,
+            }),
+          },
+        );
+
+        if (!response.ok) {
+            throw new Error(`Failed to update note (${response.status})`);
+        }
+
+        onClose()
+      } catch (error) {
+        console.error("Failed to submit note:", error);
+      }
+    }
+  }
+
   return (
     <Popup open={open} onClose={onClose} modal>
       <div className="flex flex-col gap-1 shadow-2xl w-80 h-120 text-slate-100 bg-slate-900 border-2 border-slate-700">
@@ -58,10 +124,12 @@ export default function TransactionPopup({
             <textarea
               className="border border-gray-700 w-full flex-1 p-1 text-sm resize-none focus:outline-none focus:border-slate-500"
               placeholder="Add notes for this transaction here"
+              value={noteInput}
+              onChange={(e) => setNoteInput(e.target.value)}
             />
           </div>
           <button
-            onClick={onClose}
+            onClick={submitNote}
             className="bg-slate-700 px-14 py-2 font-bold hover:cursor-pointer hover:border-slate-500 border border-transparent transition-colors"
           >
             Save
