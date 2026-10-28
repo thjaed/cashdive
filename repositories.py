@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta
-from database import AccountDb, TransactionDb, BalanceDb, CacheExpiryDb
+from database import AccountDb, TransactionDb, BalanceDb, CacheExpiryDb, TransactionNoteDb
 from api import TrueLayerClient
-from models import Transaction, Account, Balance
+from models import Transaction, Account, Balance, TransactionNote
 
 class BalanceRepository:
     def __init__(self, client: TrueLayerClient):
@@ -83,3 +83,21 @@ class TransactionRepository:
     def get_transaction_count(self, account_id: str) -> int:
         with TransactionDb() as db:
             return db.get_transaction_count(account_id)
+    
+    def transaction_exists(self, transaction_id: str) -> bool:
+        with TransactionDb() as db:
+            return db.transaction_exists(transaction_id)
+
+class TransactionNoteRepository:
+    def get_note(self, transaction_id: str) -> TransactionNote | None:
+        with TransactionNoteDb() as db:
+            return db.get_note(transaction_id)
+    
+    def set_note(self, transaction_id: str, note: str) -> None:
+        with TransactionNoteDb() as db:
+            return db.insert_note(TransactionNote(transaction_id, note))
+    
+    def delete_note(self, transaction_id: str) -> None:
+        with TransactionNoteDb() as db:
+            return db.delete_note(transaction_id)
+        

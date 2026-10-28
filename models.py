@@ -66,6 +66,15 @@ class PaginatedTransactions:
     page_count: int
     
 @dataclass
+class TransactionNote:
+    transaction_id: str
+    note: str
+
+@dataclass
+class NoteRequestBody:
+    note: str
+
+@dataclass
 class Account:
     account_id: str
     account_type: AccountType

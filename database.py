@@ -1,7 +1,7 @@
 import os
 import psycopg2
 from datetime import datetime, timezone
-from models import Balance, RunningBalance, Transaction, Account
+from models import Balance, RunningBalance, Transaction, Account, TransactionNote
 
 
 def get_connection():
@@ -354,6 +354,100 @@ class TransactionDb:
                 return result[0]
             else:
                 return 0
+        except:
+            self.conn.rollback()
+            raise
+    
+    def transaction_exists(self, transaction_id: str) -> bool:
+        query = """
+        SELECT COUNT(*) FROM transactions
+        WHERE transaction_id = %s
+        """
+        
+        try:
+            self.cursor.execute(query, (transaction_id,))
+            result = self.cursor.fetchone()
+            
+            return result is not None
+        except:
+            self.conn.rollback()
+            raise
+
+class TransactionNoteDb:
+    def __enter__(self):
+        self.conn = get_connection()
+        self.cursor = self.conn.cursor()
+        self.create_table()
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.conn.close()
+        
+    def create_table(self):
+        query = """
+        CREATE TABLE IF NOT EXISTS transaction_notes (
+            transaction_id TEXT PRIMARY KEY,
+            note TEXT NOT NULL
+        );
+        """
+        
+        try:
+            self.cursor.execute(query)
+            self.conn.commit()
+            
+        except:
+            self.conn.rollback()
+            raise
+        
+    def insert_note(self, transaction_note: TransactionNote):
+        query = """
+        INSERT INTO transaction_notes (
+            transaction_id,
+            note
+        )
+        VALUES (%s, %s)
+        ON CONFLICT (transaction_id) DO UPDATE SET
+            note = EXCLUDED.note;
+        """
+        
+        try:
+            self.cursor.execute(query, (
+                transaction_note.transaction_id,
+                transaction_note.note
+                ))
+            self.conn.commit()
+            
+        except:
+            self.conn.rollback()
+            raise
+    
+    def get_note(self, transaction_id: str) -> TransactionNote | None:
+            query = """
+            SELECT * FROM transaction_notes
+            WHERE transaction_id = %s;
+            """
+    
+            try:
+                self.cursor.execute(query, (transaction_id,))
+                result = self.cursor.fetchone()
+
+                if result is not None:
+                    return TransactionNote(transaction_id=result[0], note=result[1])
+                else:
+                    return None
+            except:
+                self.conn.rollback()
+                raise
+    
+    def delete_note(self, transaction_id: str) -> None:
+        query = """
+        DELETE FROM transaction_notes
+        WHERE transaction_id = %s;
+        """
+        
+        try:
+            self.cursor.execute(query, (transaction_id,))
+            self.conn.commit()
         except:
             self.conn.rollback()
             raise

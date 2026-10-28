@@ -3,8 +3,8 @@ from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from api import TrueLayerClient
 from auth import TrueLayerAuth
-from repositories import AccountRepository, TransactionRepository, BalanceRepository
-from models import Account, Balance, Transaction, AuthStatus, AuthCallback, PaginatedTransactions, AccountSummary
+from repositories import AccountRepository, TransactionRepository, BalanceRepository, TransactionNoteRepository
+from models import Account, Balance, Transaction, AuthStatus, AuthCallback, PaginatedTransactions, AccountSummary, TransactionNote, NoteRequestBody
 from requests.exceptions import HTTPError
 import secrets
 import os
@@ -155,7 +155,46 @@ def get_transactions(account_id: str, page: int | None = None, page_size: int | 
             raise HTTPException(error.response.status_code)
         
         raise HTTPException(502)
-                
+
+@app.get(
+    "/transactions/{transaction_id}/note",
+    response_model=TransactionNote
+)
+def transaction_note(transaction_id: str) -> TransactionNote | None:
+    transaction_note_repo = TransactionNoteRepository()
+    try:
+        note = transaction_note_repo.get_note(transaction_id)
+        return note if note is not None else TransactionNote(transaction_id, "")
+    except:
+        raise HTTPException(502)
+
+@app.patch(
+    "/transactions/{transaction_id}/note"
+)
+def patch_transaction_note(transaction_id: str, transaction_note: NoteRequestBody):
+    if len(transaction_note.note) > 1000:
+        raise HTTPException(400, detail="Note exceeds maximum length")
+    
+    if len(transaction_id) > 500:
+        raise HTTPException(400, detail="Transaction ID exceeds maximum length")
+
+    auth = TrueLayerAuth()
+    client = TrueLayerClient(auth)
+    transaction_repo = TransactionRepository(client)
+    transaction_note_repo = TransactionNoteRepository()
+    
+    try:   
+        if not transaction_repo.transaction_exists(transaction_id):
+            raise HTTPException(400, detail="Transaction does not exist")
+        
+        if len(transaction_note.note) > 0:
+            transaction_note_repo.set_note(transaction_id, transaction_note.note)
+        else:
+            transaction_note_repo.delete_note(transaction_id)
+    except HTTPException:
+        raise
+    except:
+        raise HTTPException(502)
 
 @app.get(
     "/auth/status",
