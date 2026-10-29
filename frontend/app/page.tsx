@@ -44,20 +44,20 @@ export default function Home() {
     <>
       {connectionState === null ? (
         // Connection state not determined
-        <div className="flex justify-center items-center min-h-screen bg-gray-900">
-          <div className="flex h-8 w-8 animate-spin rounded-full border-4 border-gray-600 border-t-slate-400" />
+        <div className="flex justify-center items-center min-h-screen bg-ink-950">
+          <div className="flex h-8 w-8 animate-spin rounded-full border-4 border-ink-600 border-t-terminal-400" />
         </div>
       ) : !connectionState ? (
         // Not connected
-        <div className="flex flex-col gap-4 justify-center items-center min-h-screen bg-gray-900">
+        <div className="flex flex-col gap-4 justify-center items-center min-h-screen bg-ink-950">
           <h1 className="text-bold text-2xl">
             CashDive is not connected to your bank.
           </h1>
           <Link
-            className="group inline-flex items-center text-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 text-slate-300 hover:text-white focus-visible:outline-gray-300 underline-offset-2"
+            className="group inline-flex items-center text-xl transition-colors text-slate-300 hover:text-terminal-300 underline-offset-2"
             href="http://localhost:8000/auth/start"
           >
-            <span className="hover:underline underline-offset-4 decoration-slate-300">
+            <span className="group-hover:underline underline-offset-4 decoration-terminal-300">
               Connect
             </span>
 
@@ -70,43 +70,43 @@ export default function Home() {
           </Link>
         </div>
       ) : (
-        <main className="min-h-screen bg-gray-900 px-4 py-12 text-slate-100">
+        <main className="min-h-screen bg-ink-950 px-4 py-12 text-slate-100">
           <div className="mx-auto w-full max-w-2xl">
-            <h1 className="mb-6 text-3xl font-bold uppercase font-mono">
+            <h1 className="mb-6 text-3xl font-bold uppercase font-mono text-terminal-300">
               Your Accounts
             </h1>
             {!accounts ? (
               // Skeleton account loader
-              <ul className="divide-y divide-black overflow-hidden border border-black bg-slate-800">
+              <ul className="divide-y divide-ink-600 overflow-hidden border border-ink-600 bg-ink-900">
                 {Array.from({ length: 3 }).map((_, index) => (
                   <li key={index}>
                     <div className="flex items-center gap-4 px-5 py-4">
                       <div>
-                        <div className="h-5 w-48 animate-pulse rounded bg-gray-700" />
-                        <div className="h-3 w-20 mt-3 animate-pulse rounded bg-gray-700" />
+                        <div className="h-5 w-48 animate-pulse rounded bg-ink-700" />
+                        <div className="h-3 w-20 mt-3 animate-pulse rounded bg-ink-700" />
                       </div>
-                      <div className="ml-auto h-3 w-10 mt-3 animate-pulse rounded bg-gray-700" />
+                      <div className="ml-auto h-3 w-10 mt-3 animate-pulse rounded bg-ink-700" />
                     </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <ul className="divide-y divide-black overflow-hidden border border-black bg-slate-800">
+              <ul className="divide-y divide-ink-600 overflow-hidden border border-ink-600 bg-ink-900">
                 {accounts.map((account: AccountSummary) => (
                   <li key={account.account_id}>
                     <Link
                       href={`/accounts/${account.account_id}`}
-                      className="flex items-center gap-6 px-5 py-4 hover:bg-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500"
+                      className="group flex items-center gap-6 px-5 py-4 border-transparent border-2 transition-colors hover:border-terminal-300 hover:bg-ink-700"
                     >
                       <div>
-                        <p className="font-semibold text-lg text-gray-100">
+                        <p className="font-mono uppercase tracking-tight text-lg text-slate-100">
                           {deCapitalise(account.display_name)}
                         </p>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-slate-400">
                           {deCapitalise(account.account_type)}
                         </p>
                       </div>
-                      <p className="ml-auto shrink-0 font-mono text-xl font-medium text-gray-300">
+                      <p className="ml-auto shrink-0 font-mono text-xl font-medium text-terminal-300">
                         {account.balance.available
                           ? formatCurrency(
                               account.balance.currency,
@@ -116,7 +116,7 @@ export default function Home() {
                             )
                           : ""}
                       </p>
-                      <span className="material-symbols-outlined text-gray-500">
+                      <span className="material-symbols-outlined text-slate-300 transition-colors group-hover:translate-x-0.5 group-hover:text-terminal-300">
                         chevron_forward
                       </span>
                     </Link>

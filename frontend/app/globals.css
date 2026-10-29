@@ -13,6 +13,29 @@
   --font-mono: var(--font-jetbrains-mono);
 }
 
+@theme {
+  /* Neutral black / charcoal */
+  --color-ink-950: #030303;
+  --color-ink-900: #080808;
+  --color-ink-850: #0C0C0C;
+  --color-ink-800: #111111;
+  --color-ink-750: #161616;
+  --color-ink-700: #1C1C1C;
+  --color-ink-600: #272727;
+  --color-ink-500: #333333;
+  --color-ink-400: #404040;
+
+  /* Vibrant terminal green */
+  --color-terminal-500: #16A34A;
+  --color-terminal-400: #22C55E;
+  --color-terminal-300: #39FF6A;
+  --color-terminal-200: #75FF91;
+  --color-terminal-100: #B8FFC5;
+
+  /* Really bright / special */
+  --color-positive: #39FF6A;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;

@@ -195,48 +195,51 @@ export default function AccountPage() {
   }, [account]);
 
   return (
-    <main className="min-h-screen bg-gray-900 px-4 py-12 text-slate-100">
+    <main className="min-h-screen bg-ink-950 px-4 py-12 text-slate-100">
       <div className="mx-auto max-w-3xl">
         <div className="flex flex-col pb-3">
-          <span className="flex w-fit pb-8">
-            <span className="material-symbols-outlined">chevron_backward</span>
-            <Link
-              href="/"
-              className="hover:text-gray-400 underline-offset-2 hover:underline"
-            >
+          <Link href="/" className="flex w-fit pb-8 text-slate-400 group  ">
+            <span className="text-slate-400 material-symbols-outlined group-hover:text-terminal-300">
+              chevron_backward
+            </span>{" "}
+            <p className="group-hover:text-terminal-300 underline-offset-2 group-hover:underline">
               Back to Accounts
-            </Link>
-          </span>
+            </p>
+          </Link>
 
           {account?.display_name ? (
-            <h1 className="text-3xl font-bold pb-8 uppercase font-mono">
+            <h1 className="text-3xl font-bold pb-8 uppercase font-mono text-terminal-300">
               {deCapitalise(account.display_name)}
             </h1>
           ) : (
             // skeleton title
-            <div className="h-9 w-80 mb-4 animate-pulse rounded bg-gray-700" />
+            <div className="h-9 w-80 mb-4 animate-pulse rounded bg-ink-700" />
           )}
 
           <div className="flex gap-3">
             {balance?.currency && balance.available ? (
-              <div className="bg-slate-800 border-gray-700 border-2 w-full flex flex-col items-center justify-center gap-1 py-3">
-                <h2 className="font-semibold text-lg">Account Balance</h2>
-                <h3 className="text-4xl font-mono font-bold">
+              <div className="w-full border-2 border-ink-600 bg-ink-900 px-6 py-5">
+                <h2 className="font-mono text-sm uppercase tracking-wider text-slate-400">
+                  Account Balance
+                </h2>
+                <h3 className="font-mono text-4xl font-bold text-terminal-300">
                   {formatCurrency(balance.currency, balance.available, "", "-")}
                 </h3>
               </div>
             ) : (
               // skeleton
-              <div className="bg-slate-800 border-gray-700 border-2 w-full flex flex-col items-center justify-center gap-1 py-3">
-                <h2 className="font-semibold text-lg">Account Balance</h2>
-                <div className="h-10 w-50 animate-pulse rounded bg-gray-700" />
+              <div className="w-full border-2 border-ink-600 bg-ink-900 px-6 py-5">
+                <h2 className="font-mono text-sm uppercase tracking-wider text-slate-400">
+                  Account Balance
+                </h2>
+                <div className="h-10 w-50 animate-pulse rounded bg-ink-700" />
               </div>
             )}
           </div>
         </div>
 
-        <ul className="divide-y divide-gray-700 overflow-hidden border-2 border-gray-700 bg-slate-800 max-w-3xl shadow-sm">
-          <li className="hidden sm:block bg-slate-900 font-bold text-gray-400">
+        <ul className="divide-y divide-ink-600 overflow-hidden border-2 border-ink-600 bg-ink-900 max-w-3xl shadow-sm">
+          <li className="hidden sm:block bg-ink-800 text-sm tracking-wider text-slate-400 font-mono uppercase">
             <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1.3fr)_170px_minmax(0,0.5fr)] px-5 py-1 w-full">
               <p className="order-1 mr-5">Description</p>
               <p className="order-3 sm:order-2">Date</p>
@@ -250,9 +253,8 @@ export default function AccountPage() {
                 <li
                   key={transaction.transaction_id}
                   onClick={() => setSelectedTransaction(transaction)}
-                  className="hover:cursor-pointer hover:bg-gray-600"
                 >
-                  <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-5 py-3 sm:grid-cols-[minmax(0,1.3fr)_170px_minmax(0,0.5fr)] sm:gap-0 hover:cursor-pointer hover:bg-slate-700">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-5 py-3 sm:grid-cols-[minmax(0,1.3fr)_170px_minmax(0,0.5fr)] sm:gap-0 hover:cursor-pointer border-transparent border-2 transition-colors hover:border-terminal-300 hover:bg-ink-700">
                     <div className="order-1 flex flex-col sm:flex-row min-w-0 sm:items-center justify-between sm:justify-start sm:gap-3">
                       <span className="font-bold truncate flex items-center gap-1">
                         {formatTransactionDescription(transaction.description)}
@@ -263,23 +265,23 @@ export default function AccountPage() {
                         )}
                       </span>
                       {transaction.pending && (
-                        <div className="hidden sm:block rounded-sm border border-gray-300 px-2 text-sm">
+                        <div className="hidden sm:block rounded-sm border border-terminal-300 text-terminal-300 px-2 text-sm">
                           Pending
                         </div>
                       )}
 
-                      <p className="sm:hidden text-gray-300">
+                      <p className="sm:hidden text-slate-300">
                         {formatTransactionDate(transaction.timestamp)}
                       </p>
                     </div>
 
-                    <p className="hidden sm:block text-gray-300 sm:order-2">
+                    <p className="hidden sm:block text-slate-300 sm:order-2">
                       {formatTransactionDate(transaction.timestamp)}
                     </p>
 
                     <div className="order-2 ml-auto flex flex-col items-end gap-2 sm:order-3 sm:flex-row">
                       <div
-                        className={`rounded-sm w-fit px-1 ${Number(transaction.amount) > 0 ? "bg-green-800/50" : ""}`}
+                        className={`rounded-sm w-fit px-1 ${Number(transaction.amount) > 0 ? "bg-positive/30" : ""}`}
                       >
                         <p className="text-ml font-mono font-bold">
                           {formatCurrency(
@@ -291,7 +293,7 @@ export default function AccountPage() {
                         </p>
                       </div>
                       {transaction.pending ? (
-                        <div className="sm:hidden rounded-sm border border-gray-300 px-2 text-sm">
+                        <div className="sm:hidden rounded-sm border border-terminal-300 text-terminal-300 px-2 text-sm">
                           Pending
                         </div>
                       ) : (
@@ -306,12 +308,12 @@ export default function AccountPage() {
                 <li key={index}>
                   <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1fr)_150px_180px] md:grid-cols-[minmax(0,1fr)_170px_200px] px-5 py-3 w-full">
                     <div
-                      className="order-1 mb-2 sm:mb-0 mr-5 h-5 sm:h-6 animate-pulse rounded bg-gray-700"
+                      className="order-1 mb-2 sm:mb-0 mr-5 h-5 sm:h-6 animate-pulse rounded bg-ink-700"
                       style={{ width: `${skeletonWidth(index, 150, 210)}px` }}
                     />
-                    <div className="order-3 sm:order-2 h-5 sm:h-6 w-36 animate-pulse rounded bg-gray-700" />
+                    <div className="order-3 sm:order-2 h-5 sm:h-6 w-36 animate-pulse rounded bg-ink-700" />
                     <div className="order-2 sm:order-3 ml-auto flex gap-3">
-                      <div className="h-6 w-16 animate-pulse rounded bg-gray-700" />
+                      <div className="h-6 w-16 animate-pulse rounded bg-ink-700" />
                     </div>
                   </div>
                 </li>
@@ -331,7 +333,7 @@ export default function AccountPage() {
           <div className="flex gap-3 items-center">
             <button
               onClick={() => incrementPage(-1)}
-              className="flex items-center hover:cursor-pointer hover:bg-gray-700 bg-slate-800 border-gray-700 shadow-sm border-2"
+              className="flex items-center border-2 border-ink-600 bg-ink-800 shadow-sm transition-colors hover:cursor-pointer hover:border-terminal-300 hover:bg-ink-700"
             >
               <span className="material-symbols-outlined">
                 chevron_backward
@@ -341,7 +343,7 @@ export default function AccountPage() {
             <p>Page</p>
 
             <input
-              className="field-sizing-content bg-slate-800 border-gray-700 shadow-sm border-2 text-center px-3 py-1"
+              className="field-sizing-content border-2 border-ink-600 bg-ink-800 px-3 py-1 text-center shadow-sm focus:border-terminal-300 focus:outline-none"
               value={pageInput}
               onFocus={() => setPageInput("")}
               onChange={(e) => setPageInput(e.target.value)}
@@ -357,7 +359,7 @@ export default function AccountPage() {
 
             <button
               onClick={() => incrementPage(1)}
-              className="flex items-center hover:cursor-pointer hover:bg-gray-700 bg-slate-800 border-gray-700 shadow-sm border-2"
+              className="flex items-center border-2 border-ink-600 bg-ink-800 shadow-sm transition-colors hover:cursor-pointer hover:border-terminal-300 hover:bg-ink-700"
             >
               <span className="material-symbols-outlined">chevron_forward</span>
             </button>
@@ -366,7 +368,7 @@ export default function AccountPage() {
             Transactions Per Page
             <select
               name="selectedPageSize"
-              className="bg-slate-800 border-gray-700 shadow-sm border-2 px-3 py-2 hover:cursor-pointer"
+              className="border-2 border-ink-600 bg-ink-800 px-3 py-2 shadow-sm hover:cursor-pointer focus:border-terminal-300 focus:outline-none"
               onChange={(e) => {
                 setCurrentPage(1);
                 setPageSize(Number(e.target.value));
