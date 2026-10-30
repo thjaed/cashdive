@@ -102,20 +102,20 @@ class Account:
     update_timestamp: datetime
 
 @dataclass
-class AccountSummary:
-    account_id: str
-    account_type: AccountType
-    display_name: str
-    balance: Balance
-    update_timestamp: datetime
-    
-@dataclass
 class Balance:
     account_id: str
     currency: Currency
     current: Decimal
     available: Decimal | None = None
     update_timestamp: datetime | None = None
+    
+@dataclass
+class AccountSummary:
+    account_id: str
+    account_type: AccountType
+    display_name: str
+    balance: Balance
+    update_timestamp: datetime
 
 @dataclass
 class AuthStatus:

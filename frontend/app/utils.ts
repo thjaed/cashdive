@@ -73,11 +73,12 @@ export function formatTransactionDescription(text: string): string {
 }
 
 export function formatTransactionDate(date: string): string {
+    const locale = process.env.NEXT_PUBLIC_LOCALE;
     const parsedDate = new Date(date);
 
     const day = parsedDate.getDate();
 
-    const month = parsedDate.toLocaleDateString("en-GB", {
+    const month = parsedDate.toLocaleDateString(locale, {
         month: "short",
     });
 
@@ -87,15 +88,16 @@ export function formatTransactionDate(date: string): string {
 }
 
 export function formatLongTransactionDate(date: string): string {
+    const locale = process.env.NEXT_PUBLIC_LOCALE;
     const parsedDate = new Date(date);
 
     const day = parsedDate.getDate();
 
-    const weekday = parsedDate.toLocaleDateString("en-GB", {
+    const weekday = parsedDate.toLocaleDateString(locale, {
         weekday: "long"
     })
 
-    const month = parsedDate.toLocaleDateString("en-GB", {
+    const month = parsedDate.toLocaleDateString(locale, {
         month: "long",
     });
 

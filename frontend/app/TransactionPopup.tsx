@@ -32,7 +32,7 @@ export default function TransactionPopup({
 
       try {
         const response = await fetch(
-          `http://localhost:8000/transactions/${transaction.transaction_id}/note`,
+          `/api/transactions/${transaction.transaction_id}/note`,
           {
             cache: "no-store",
             signal: controller.signal,
@@ -61,7 +61,7 @@ export default function TransactionPopup({
     if (noteInput.length <= 1000) {      
       try {
         const response = await fetch(
-          `http://localhost:8000/transactions/${transaction.transaction_id}/note`,
+          `/api/transactions/${transaction.transaction_id}/note`,
           {
             method: "PATCH",
             headers: {

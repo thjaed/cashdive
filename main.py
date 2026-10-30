@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from fastapi.middleware.cors import CORSMiddleware
 from api import TrueLayerClient
 from auth import TrueLayerAuth
 from repositories import AccountRepository, TransactionRepository, BalanceRepository, TransactionNoteRepository
@@ -13,9 +12,6 @@ import math
 
 app = FastAPI()
 
-origins = [
-    "http://localhost:3000"
-]
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.environ["SESSION_SECRET"],
@@ -24,16 +20,8 @@ app.add_middleware(
     max_age=900
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 @app.get(
-    "/accounts",
+    "/api/accounts",
     response_model=list[Account]
 )
 def get_accounts() -> list[Account]:
@@ -56,7 +44,7 @@ def get_accounts() -> list[Account]:
         raise HTTPException(502)
 
 @app.get(
-    "/account_summary",
+    "/api/account_summary",
     response_model=list[AccountSummary]
 )
 def get_account_summary() -> list[AccountSummary]:
@@ -92,7 +80,7 @@ def get_account_summary() -> list[AccountSummary]:
         raise HTTPException(502)
     
 @app.get(
-    "/balance/{account_id}",
+    "/api/balance/{account_id}",
     response_model=Balance
 )
 def get_balance(account_id: str) -> Balance:
@@ -121,7 +109,7 @@ def get_balance(account_id: str) -> Balance:
     
 
 @app.get(
-    "/transactions/{account_id}",
+    "/api/transactions/{account_id}",
     response_model=PaginatedTransactions
 )
 def get_transactions(account_id: str, page: int | None = None, page_size: int | None = None) -> PaginatedTransactions:
@@ -157,7 +145,7 @@ def get_transactions(account_id: str, page: int | None = None, page_size: int | 
         raise HTTPException(502)
 
 @app.get(
-    "/transactions/{account_id}/summary",
+    "/api/transactions/{account_id}/summary",
     response_model=PaginatedTransactionsSummary
 )
 def get_transaction_summary(account_id: str, page: int | None = None, page_size: int | None = None) -> PaginatedTransactionsSummary:
@@ -194,7 +182,7 @@ def get_transaction_summary(account_id: str, page: int | None = None, page_size:
 
 
 @app.get(
-    "/transactions/{transaction_id}/note",
+    "/api/transactions/{transaction_id}/note",
     response_model=TransactionNote
 )
 def transaction_note(transaction_id: str) -> TransactionNote | None:
@@ -206,7 +194,7 @@ def transaction_note(transaction_id: str) -> TransactionNote | None:
         raise HTTPException(502)
 
 @app.patch(
-    "/transactions/{transaction_id}/note"
+    "/api/transactions/{transaction_id}/note"
 )
 def patch_transaction_note(transaction_id: str, transaction_note: NoteRequestBody):
     if len(transaction_note.note) > 1000:
@@ -234,7 +222,7 @@ def patch_transaction_note(transaction_id: str, transaction_note: NoteRequestBod
         raise HTTPException(502)
 
 @app.get(
-    "/auth/status",
+    "/api/auth/status",
     response_model=AuthStatus
 )
 def auth_status() -> AuthStatus:
@@ -250,7 +238,7 @@ def auth_status() -> AuthStatus:
         return AuthStatus(connected=False)
     
 @app.get(
-    "/auth/start"
+    "/api/auth/start"
 )
 def start_auth(request: Request) -> RedirectResponse:
     # Redirect to TrueLayer bank login
@@ -264,7 +252,7 @@ def start_auth(request: Request) -> RedirectResponse:
     return RedirectResponse(auth_url)
     
 @app.get(
-    "/auth/callback",
+    "/api/auth/callback",
 )
 def auth_callback(
     request: Request,
@@ -308,4 +296,4 @@ def auth_callback(
         
         raise HTTPException(502)
     
-    return RedirectResponse("http://localhost:3000/")
+    return RedirectResponse("/")

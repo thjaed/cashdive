@@ -90,7 +90,7 @@ export default function AccountPage() {
 
       try {
         const response = await fetch(
-          `http://localhost:8000/balance/${accountId}`,
+          `/api/balance/${accountId}`,
           {
             cache: "no-store",
             signal: controller.signal,
@@ -121,7 +121,7 @@ export default function AccountPage() {
     async function getTransactions() {
       try {
         const response = await fetch(
-          `http://localhost:8000/transactions/${accountId}/summary?page=${currentPage}&page_size=${pageSize}`,
+          `/api/transactions/${accountId}/summary?page=${currentPage}&page_size=${pageSize}`,
           {
             cache: "no-store",
             signal: controller.signal,
@@ -157,7 +157,7 @@ export default function AccountPage() {
       setAccount(null);
 
       try {
-        const response = await fetch("http://localhost:8000/accounts", {
+        const response = await fetch("/api/accounts", {
           cache: "no-store",
           signal: controller.signal,
         });

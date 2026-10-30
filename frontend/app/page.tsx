@@ -10,7 +10,7 @@ export default function Home() {
   const [connectionState, setConnectionState] = useState<boolean | null>(null);
 
   async function getConnectionStatus() {
-    const response = await fetch("http://localhost:8000/auth/status", {
+    const response = await fetch("/api/auth/status", {
       cache: "no-store",
     });
     if (response.status == 200) {
@@ -21,7 +21,7 @@ export default function Home() {
 
   async function getAccounts() {
     if (connectionState) {
-      const response = await fetch("http://localhost:8000/account_summary", {
+      const response = await fetch("/api/account_summary", {
         cache: "no-store",
       });
       if (response.status == 200) {
@@ -55,7 +55,7 @@ export default function Home() {
           </h1>
           <Link
             className="group inline-flex items-center text-xl transition-colors text-slate-300 hover:text-terminal-300 underline-offset-2"
-            href="http://localhost:8000/auth/start"
+            href="/api/auth/start"
           >
             <span className="group-hover:underline underline-offset-4 decoration-terminal-300">
               Connect

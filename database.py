@@ -347,8 +347,11 @@ class TransactionDb:
         
         if not limit: limit = 5
         if not skip: skip = 0
-                
+                        
         try:
+            with TransactionNoteDb() as db: # creates the notes table if it doesn't exist
+                pass
+            
             self.cursor.execute(query, (account_id, limit, skip))
             records = self.cursor.fetchall()
             

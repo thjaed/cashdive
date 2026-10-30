@@ -16,7 +16,7 @@ class TrueLayerAuth:
         elif self.client_secret == None:
             raise Exception("CLIENT_SECRET environment variable not set")
         
-        self.redirect_uri = "http://localhost:8000/auth/callback"
+        self.redirect_uri = f"{os.environ["PUBLIC_URL"]}/api/auth/callback" # Add this to TrueLayer console
         self.access_token = None
         self.refresh_token = None
         self.token_expiry = None
@@ -36,6 +36,7 @@ class TrueLayerAuth:
             "https://auth.truelayer-sandbox.com/?"
             + urlencode(params)
         )
+        print(url)
         return url
 
     def exchange_code(self, code):
